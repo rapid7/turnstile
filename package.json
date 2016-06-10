@@ -1,6 +1,13 @@
 {
   "name": "turnstile",
   "version": "1.0.0",
+  "author": "Rapid7 Inc. <PlatformDelivery_CAM@rapid7.com>",
+  "contributors": [
+    "David Greene <David_Greene@rapid7.com>",
+    "Frank Mitchell <Frank_Mitchell@rapid7.com>",
+    "John Manero <John_Manero@rapid7.com>",
+    "Richard Van Buren <Richard_VanBuren@rapid7.com>"
+  ],
   "description": "Access-control proxy service for APIs",
   "scripts": {
     "test": "mocha",
