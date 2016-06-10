@@ -1,0 +1,13 @@
+{
+  "plugins": [
+    "rapid7"
+  ],
+  "extends": "rapid7",
+  "globals": {
+    "Config": true,
+    "Log": true
+  },
+  "env": {
+    "node": true
+  }
+}
