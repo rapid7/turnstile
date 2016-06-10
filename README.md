@@ -10,4 +10,4 @@ Turnstile is a minimalistic middleware server that applies consistent access con
 
 ## Documentation
 
-* Code API: [https://rapid7.github.io/turnstile](file:///Users/jmanero/workspace/turnstile/docs/jsdoc/index.html)
+* Code API: [https://rapid7.github.io/turnstile](http://rapid7.github.io/turnstile/jsdoc/)
