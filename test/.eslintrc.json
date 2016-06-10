@@ -1,0 +1,11 @@
+{
+  "rules": {
+    "rapid7/static-magic-numbers": 0,
+    "max-nested-callbacks": 0,
+    "no-unused-expressions": 0,
+    "no-unused-vars": 0
+  },
+  "env": {
+    "mocha": true
+  }
+}
