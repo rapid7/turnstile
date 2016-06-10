@@ -12,7 +12,7 @@
   "scripts": {
     "test": "mocha",
     "cover": "istanbul cover _mocha",
-    "doc": "jsdoc -d docs lib/**",
+    "doc": "jsdoc -c .jsdoc.json lib/**",
     "lint": "eslint bin/* lib/*.js lib/**/*.js test/*.js test/**/*.js",
     "report": "coveralls < ./coverage/lcov.info"
   },
