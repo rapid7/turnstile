@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+'use strict';
+
+require('../lib/config');
+require('../lib/log');
+
+const app = require('../lib/control/layer').create();
+const server = require('http').createServer(app);
+
+app.use(require('../lib/provider/local').authn(Config.get('local')));
+app.use(require('../lib/control/forward').create(Config.get('service')));
+
+server.listen(
+  Config.get('listen:port'),
+  Config.get('listen:bind'),
+  () => Log.info(`Listening on ${Config.get('listen:bind')}:${Config.get('listen:port')}`)
+);
