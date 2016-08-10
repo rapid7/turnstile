@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "nconf": "^0.8.4",
-    "winston": "^2.2.0"
+    "winston": "^2.2.0",
+    "yargs": "^4.8.1"
   }
 }
