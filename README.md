@@ -11,3 +11,20 @@ Turnstile is a minimalistic middleware server that applies consistent access con
 ## Documentation
 
 * Code API: [https://rapid7.github.io/turnstile](http://rapid7.github.io/turnstile/jsdoc/)
+
+## Releasing
+To cut a release do the following:
+
+* [Bump the version][npm-version]
+* Build and upload a package
+* Create a new release on github.com
+
+This can be accomplished by running the following commands:
+~~~bash
+npm version minor
+rake
+~~~
+Then following the steps to create the release on [github.com]
+
+[npm-version]: https://docs.npmjs.com/cli/version
+[github.com]: https://www.github.com
