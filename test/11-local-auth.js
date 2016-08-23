@@ -112,6 +112,18 @@ describe('lib/provider/local', function middleware() {
       expect(() => controller(req, res, function next() {})).to.throw(Errors.RequestError);
     });
 
+    it('raises an error if the Authorization protocol is unsupported', function behavior() {
+      req.headers.authorization = 'Rapid7-HMAC-V1-FOOBAR randomBase64foobarbaz';
+
+      expect(() => controller(req, res, function next() {})).to.throw(Errors.AuthorizationError);
+    });
+
+    it('raises an error if the Authorization parameters are invalid', function behavior() {
+      req.headers.authorization = 'Rapid7-HMAC-V1-SHA256 randomBase64foobarbaz';
+
+      expect(() => controller(req, res, function next() {})).to.throw(Errors.AuthorizationError);
+    });
+
     it('raises an error if the date skew is too high', function behavior() {
       req.headers.date = Fixtures.SIGNATURE.DATE;
 
