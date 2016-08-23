@@ -19,7 +19,15 @@ describe('lib/provider/local', function middleware() {
       req.method = Fixtures.SIGNATURE.METHOD;
       req.url = Fixtures.SIGNATURE.URL;
 
-      const authorization = Buffer(Fixtures.DB.KEY + ':' + Fixtures.SIGNATURE.SIGNATURE, 'utf8').toString('base64');
+      /*
+       * TODO The `Buffer()`` constructor is going to become deprecated, but
+       * `Buffer.from(str, enc)` isn't fully implemented yet. Need to replace this
+       * call someday.
+       */
+      const authorization = Buffer( // eslint-disable-line new-cap
+        Fixtures.DB.KEY + ':' +
+        Fixtures.SIGNATURE.SIGNATURE, 'utf8'
+      ).toString('base64');
 
       req.headers = {
         authorization: `Rapid7-HMAC-V1-SHA256 ${authorization}`,
@@ -30,7 +38,7 @@ describe('lib/provider/local', function middleware() {
     });
 
     it('fails if required headers are missing', function behavior() {
-      delete req.headers['authorization'];
+      delete req.headers.authorization;
 
       expect(() => Controller.validate(5000, req)).to.throw(Errors.RequestError);
     });
@@ -64,7 +72,6 @@ describe('lib/provider/local', function middleware() {
       req.method = Fixtures.SIGNATURE.METHOD;
       req.url = Fixtures.SIGNATURE.URL;
 
-
       req.headers = {
         date: now,
         digest: 'sha256=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=',
@@ -77,9 +84,17 @@ describe('lib/provider/local', function middleware() {
       const signature = new Signature(Config.get('local:algorithm'), req);
 
       signature.sign(Fixtures.DB.SECRET);
-      req.signature = signature.signature
+      req.signature = signature.signature;
 
-      const authorization = Buffer(Fixtures.DB.KEY + ':' + signature.signature, 'utf8').toString('base64');
+      /*
+       * TODO The `Buffer()`` constructor is going to become deprecated, but
+       * `Buffer.from(str, enc)` isn't fully implemented yet. Need to replace this
+       * call someday.
+       */
+      const authorization = Buffer( // eslint-disable-line new-cap
+        Fixtures.DB.KEY + ':' +
+        signature.signature, 'utf8'
+      ).toString('base64');
 
       req.headers.authorization = `Rapid7-HMAC-V1-SHA256 ${authorization}`;
     });
