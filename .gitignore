@@ -40,3 +40,8 @@ node_modules
 
 # Local data
 data
+
+# Build artifacts
+*.tar.gz
+*.tgz
+npm-shrinkwrap.json
