@@ -7,6 +7,6 @@ cookbook.depends 'turnstile' do |turnstile|
   turnstile.path './cookbook'
 end
 
-profile :default do |test|
-  test.chef.run_list 'turnstile::default'
+profile :default do |default|
+  default.chef.run_list 'turnstile::default'
 end
