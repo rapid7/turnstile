@@ -16,17 +16,29 @@ describe('lib/provider/local', function middleware() {
     const req = new HTTP.IncomingMessage();
 
     beforeEach(function setup() {
+      req.method = Fixtures.SIGNATURE.METHOD;
       req.url = Fixtures.SIGNATURE.URL;
+
+      /*
+       * TODO The `Buffer()`` constructor is going to become deprecated, but
+       * `Buffer.from(str, enc)` isn't fully implemented yet. Need to replace this
+       * call someday.
+       */
+      const authorization = Buffer( // eslint-disable-line new-cap
+        Fixtures.DB.KEY + ':' +
+        Fixtures.SIGNATURE.SIGNATURE, 'utf8'
+      ).toString('base64');
+
       req.headers = {
+        authorization: `Rapid7-HMAC-V1-SHA256 ${authorization}`,
         date: Fixtures.SIGNATURE.DATE,
-        host: Fixtures.SIGNATURE.HOST,
-        'x-auth-key': Fixtures.DB.KEY,
-        'x-auth-signature': Fixtures.SIGNATURE.SIGNATURE
+        digest: 'sha256=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=',
+        host: Fixtures.SIGNATURE.HOST
       };
     });
 
     it('fails if required headers are missing', function behavior() {
-      delete req.headers['x-auth-signature'];
+      delete req.headers.authorization;
 
       expect(() => Controller.validate(5000, req)).to.throw(Errors.RequestError);
     });
@@ -57,21 +69,34 @@ describe('lib/provider/local', function middleware() {
     beforeEach(function setup() {
       const now = (new Date()).toString();
 
-      const signature = new Signature(Config.get('local:algorithm'), {
-        Date: now,
-        Method: Fixtures.SIGNATURE.METHOD,
-        URI: Fixtures.SIGNATURE.URL,
-        Host: Fixtures.SIGNATURE.HOST
-      });
-
       req.method = Fixtures.SIGNATURE.METHOD;
       req.url = Fixtures.SIGNATURE.URL;
+
       req.headers = {
         date: now,
-        host: Fixtures.SIGNATURE.HOST,
-        'x-auth-key': Fixtures.DB.KEY,
-        'x-auth-signature': signature.sign(Fixtures.DB.SECRET)
+        digest: 'sha256=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=',
+        host: Fixtures.SIGNATURE.HOST
       };
+
+      req.date = new Date(now);
+      req.identity = Fixtures.DB.KEY;
+
+      const signature = new Signature(Config.get('local:algorithm'), req);
+
+      signature.sign(Fixtures.DB.SECRET);
+      req.signature = signature.signature;
+
+      /*
+       * TODO The `Buffer()`` constructor is going to become deprecated, but
+       * `Buffer.from(str, enc)` isn't fully implemented yet. Need to replace this
+       * call someday.
+       */
+      const authorization = Buffer( // eslint-disable-line new-cap
+        Fixtures.DB.KEY + ':' +
+        signature.signature, 'utf8'
+      ).toString('base64');
+
+      req.headers.authorization = `Rapid7-HMAC-V1-SHA256 ${authorization}`;
     });
 
     it('passes a valid request to the next middleware', function behavior(done) {
@@ -81,14 +106,20 @@ describe('lib/provider/local', function middleware() {
       });
     });
 
-    it('raises an error if the signature is invalid', function behavior() {
-      req.headers['x-auth-signature'] = 'INVLAID_SIGNATURE';
+    it('raises an error if the Authorization header is invalid', function behavior() {
+      req.headers.authorization = 'INVLAID_HEADER';
+
+      expect(() => controller(req, res, function next() {})).to.throw(Errors.RequestError);
+    });
+
+    it('raises an error if the Authorization protocol is unsupported', function behavior() {
+      req.headers.authorization = 'Rapid7-HMAC-V1-FOOBAR randomBase64foobarbaz';
 
       expect(() => controller(req, res, function next() {})).to.throw(Errors.AuthorizationError);
     });
 
-    it('raises an error if the key is invalid', function behavior() {
-      req.headers['x-auth-key'] = 'INVLAID_KEY';
+    it('raises an error if the Authorization parameters are invalid', function behavior() {
+      req.headers.authorization = 'Rapid7-HMAC-V1-SHA256 randomBase64foobarbaz';
 
       expect(() => controller(req, res, function next() {})).to.throw(Errors.AuthorizationError);
     });

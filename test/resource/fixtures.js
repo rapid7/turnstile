@@ -6,8 +6,8 @@ exports.SIGNATURE = {
   URL: '/after/it',
   DATE: 'Thu Mar 24 2016 00:17:57 GMT-0400 (EDT)',
   HOST: 'localhost',
-  SECRET: '00ccf57c75b17a0f86b1e2fa231339f99ba9d334c636d1c473e71783cf902e24',
-  SIGNATURE: 'tWN/dWrtBniKSrTfVQmRxLng6KVGC4s7BAruMTAWY2w='
+  DIGEST: 'sha256=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=',
+  SIGNATURE: 'AuICfpC1IcSBDoFYh/wjc+pgsmfd2t8EGng+n0FK3Tk='
 };
 
 /**

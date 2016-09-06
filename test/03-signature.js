@@ -10,15 +10,19 @@ const expect = require('chai').expect;
 
 describe('lib/signature', function _signature() {
   const signature = new Signature(Config.get('local:algorithm'), {
-    Date: Fixtures.SIGNATURE.DATE,
-    Method: Fixtures.SIGNATURE.METHOD,
-    URI: Fixtures.SIGNATURE.URL,
-    Host: Fixtures.SIGNATURE.HOST
+    method: Fixtures.SIGNATURE.METHOD,
+    url: Fixtures.SIGNATURE.URL,
+    date: new Date(Fixtures.SIGNATURE.DATE),
+    headers: {
+      host: Fixtures.SIGNATURE.HOST,
+      digest: Fixtures.SIGNATURE.DIGEST
+    },
+    identity: Fixtures.DB.KEY
   });
 
   it('generates a base64 signature string', function behavior() {
     expect(signature.signature).to.be.undefined;
-    signature.sign(Fixtures.SIGNATURE.SECRET);
+    signature.sign(Fixtures.DB.SECRET);
 
     expect(signature.signature).to.match(/^[a-zA-Z0-9\/\+=]+$/);
     expect(signature.signature).to.equal(Fixtures.SIGNATURE.SIGNATURE);
