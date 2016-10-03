@@ -19,13 +19,18 @@ remote_file 'turnstile' do
   notifies :run, 'execute[extract source]', :immediate
 end
 
+directory node['turnstile']['paths']['directory']
+
 ## Unpack GitHub tarball
 execute 'extract source' do
   command ["tar -xzf #{resources('remote_file[turnstile]').path}",
            '--strip-components=1',
            "--directory #{node['turnstile']['paths']['directory']}"].join(' ')
 
-  action :nothing
+  action ::File.exist?(
+    ::File.join(node['turnstile']['paths']['directory'], 'package.json')
+  ) ? :nothing : :run
+
   notifies :run, 'execute[npm install]', :immediate
 end
 
