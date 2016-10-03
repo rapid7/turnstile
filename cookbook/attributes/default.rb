@@ -17,5 +17,5 @@ default['turnstile']['paths']['configuration'] = '/etc/turnstile/config.json'
 
 default['turnstile']['config'] = Mash.new
 default['turnstile']['version'] = nil
-default['turnstile']['install'] = :github
+default['turnstile']['install'] = :github_release
 default['turnstile']['enable'] = true

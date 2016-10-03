@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: turnstile
-# Recipe:: _install_github
+# Recipe:: _install_github_release
 #
 # Copyright (C) 2016 Rapid7 LLC.
 #
