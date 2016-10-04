@@ -21,10 +21,14 @@ To cut a release do the following:
 
 This can be accomplished by running the following commands:
 ~~~bash
-npm version minor
-rake
+$ npm version minor
+$ bundle exec rake default
 ~~~
-Then following the steps to create the release on [github.com]
+To be able to create a new release on [github.com], you must have the following environment variables set:
+ * `GITHUB_CLIENT_ID`
+ * `GITHUB_CLIENT_TOKEN`
+
+and the user and token must have the appropriate permissions in this repository.
 
 [npm-version]: https://docs.npmjs.com/cli/version
 [github.com]: https://www.github.com
