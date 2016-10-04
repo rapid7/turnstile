@@ -1,0 +1,170 @@
+#!/usr/bin/env node
+
+'use strict';
+
+const Crypto = require('crypto');
+const FS = require('fs');
+const HTTP = require('http');
+const HTTPS = require('https');
+const Path = require('path');
+const Signature = require('../lib/signature');
+const URL = require('url');
+
+require('../lib/config');
+require('../lib/log');
+
+Config.argv({
+  config: {
+    alias: 'c',
+    describe: 'Path to local turnstile configuration'
+  },
+  method: {
+    alias: 'X',
+    default: 'GET',
+    describe: 'HTTP request method'
+  },
+  payload: {
+    alias: 'd',
+    describe: 'HTTP request payload'
+  },
+  digest: {
+    default: 'sha256',
+    describe: 'Digest signing scheme'
+  },
+  header: {
+    alias: 'H',
+    array: true,
+    describe: 'HTTP request headers'
+  },
+
+  identity: {
+    alias: 'u',
+    demand: true,
+    describe: 'Identity key for the request'
+  },
+  secret: {
+    alias: 'p',
+    demand: true,
+    describe: 'Secret key for the request'
+  },
+
+  verbose: {
+    alias: 'v',
+    describe: 'Print verbose status information'
+  }
+});
+
+const date = new Date();
+const url = Config.get('_')[0];
+const request = URL.parse(url);
+
+request.method = Config.get('method');
+request.headers = {
+  date: date.toString(),
+  host: request.host,
+  'user-agent': `node-${process.version}/turnstile-tester`
+};
+
+// Select HTTP[S] provider
+const Protocol = request.protocol === 'https:' ? HTTPS : HTTP;
+
+// Remove extra/overriding request parameters
+delete request.protocol;
+delete request.auth;
+delete request.host;
+delete request.pathname;
+delete request.query;
+delete request.search;
+delete request.hash;
+delete request.href;
+
+// Round date to the nearest seconds for signing
+request.date = new Date(date);
+request.date.setMilliseconds(0);
+
+request.identity = Config.get('identity');
+
+// Read data for request payload
+let data = Config.get('payload');
+const hash = Crypto.createHash(Config.get('digest'));
+
+switch (data[0]) {
+case '-':
+  // Read from STDIN
+  data = '';
+
+  process.stdin.setEncoding('utf8');
+  process.stdin.on('data', (d) => {
+    data += d;
+  });
+  process.stdin.on('end', () => resumeRequest());
+  break;
+
+case '@':
+  // Read from a file
+  data = FS.readFileSync(Path.resolve(__dirname, data.slice(1)));
+  resumeRequest();
+  break;
+
+default:
+  resumeRequest();
+}
+
+function resumeRequest() {
+  if (data) {
+    hash.update(data, 'utf8');
+  }
+  request.headers.digest = `${Config.get('digest')}=${hash.digest('hex')}`;
+
+  const signature = new Signature('sha256', request);
+  signature.sign(Config.get('secret'));
+
+  Log.debug(`Request Identity: ${request.identity}`);
+  Log.debug(`Request Signature: ${signature.signature}`);
+
+  const authorization = Buffer(`${request.identity}:${signature.signature}`, 'utf8').toString('base64');
+  request.headers.authorization = `Rapid7-HMAC-V1-SHA256 ${authorization}`;
+
+  const req = Protocol.request(request);
+
+  if (Config.get('verbose')) {
+    Log.info(`> ${request.method} ${request.path} HTTP/1.1`);
+    Object.keys(request.headers).forEach((header) => {
+      Log.info(`> ${header}: ${request.headers[header]}`);
+    });
+
+    if (data) {
+      Log.info(`> Sending ${Buffer.byteLength(data)} bytes`);
+    }
+
+    Log.info('>');
+  }
+
+  req.on('response', function(response) {
+    const chunks = [];
+
+    if (Config.get('verbose')) {
+      Log.info(`< HTTP/1.1 ${response.statusCode} ${response.statusMessage}`);
+      Object.keys(response.headers).forEach((header) => {
+        Log.info(`< ${header}: ${response.headers[header]}`);
+      });
+    }
+
+    response.on('data', (d) => chunks.push(d));
+    response.on('end', () => {
+      const rdata = Buffer.concat(chunks);
+
+      if (Config.get('verbose')) {
+        Log.info(`< Received ${rdata.length} bytes`);
+        Log.info('<');
+      }
+
+      process.stdout.write(rdata);
+    });
+  });
+
+  if (data) {
+    req.write(data, 'utf8');
+  }
+  req.end();
+}
