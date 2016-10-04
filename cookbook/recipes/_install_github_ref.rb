@@ -7,6 +7,7 @@
 # Distributed under terms of the MIT License. All rights not explicitly granted
 # in the MIT license are reserved. See the included LICENSE file for more details.
 #
+directory node['turnstile']['paths']['directory']
 
 ## Fetch and install turnstile
 remote_file 'turnstile' do
@@ -18,8 +19,6 @@ remote_file 'turnstile' do
 
   notifies :run, 'execute[extract source]', :immediate
 end
-
-directory node['turnstile']['paths']['directory']
 
 ## Unpack GitHub tarball
 execute 'extract source' do
