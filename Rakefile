@@ -99,6 +99,8 @@ end
 
 task :deb => [:chdir_pkg, :turnstile_source] do
   command = [
+    'bundle',
+    'exec',
     'fpm',
     '--deb-no-default-config-files',
     "--depends \"nodejs >= #{target_version}\"",
