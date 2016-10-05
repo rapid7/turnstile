@@ -119,7 +119,8 @@ task :deb => [:chdir_pkg, :source] do
   sh command
 end
 
-task :upload_packages => [:deb] do
+task :upload_packages do
+  cd pkg_dir
   mkdir 'copy_to_s3'
   deb = Dir["#{name}_#{version}_*.deb"].first
   cp deb, 'copy_to_s3/'
@@ -131,7 +132,7 @@ task :upload_packages => [:deb] do
 end
 
 desc "Release #{name} and prepare to create a release on github.com"
-task :release => [:package] do
+task :release do
   puts
   puts "Create a new #{version} release on github.com and upload the #{name} tarball"
   puts 'You can find directions here: https://github.com/blog/1547-release-your-software'
@@ -172,3 +173,4 @@ CLEAN.include '**/.DS_Store'
 CLEAN.include 'node_modules/'
 
 task :default => [:clean, :package, :release]
+task :upload => [:clean, :package, :upload_packages]
