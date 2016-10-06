@@ -49,12 +49,12 @@ def install_dir
   ::File.join('pkg', 'opt', name)
 end
 
-def base_dir
-  @base_dir ||= File.dirname(File.expand_path(__FILE__))
-end
-
 def pkg_dir
   ::File.join(base_dir, 'pkg')
+end
+
+def base_dir
+  @base_dir ||= File.dirname(File.expand_path(__FILE__))
 end
 
 def github_client
@@ -91,7 +91,6 @@ task :turnstile_source => [:install] do
     cp_r ::File.join(base_dir, src), ::File.join(base_dir, install_dir)
   end
 end
-
 
 task :chdir_pkg => [:package_dirs] do
   cd pkg_dir
