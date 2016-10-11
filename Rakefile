@@ -154,7 +154,7 @@ task :release do
 
   [
     ::File.join(pkg_dir, "#{name}-#{version}.tgz"),
-    ::File.join(pkg_dir, "#{name}-#{version}_amd64.deb")
+    ::File.join(pkg_dir, "#{name}_#{version}_amd64.deb")
   ].each do |f|
     github_client.upload_asset(release.url, f)
   end
