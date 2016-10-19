@@ -1,3 +1,4 @@
+'use strict';
 /**
  *  A valid signature and its input parameters for testing
  */

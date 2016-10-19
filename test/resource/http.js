@@ -1,5 +1,4 @@
 'use strict';
-
 /**
  * This check fails for assignment of values on an Object argument, and does not
  * allow for argument type-checking/default setters. */
@@ -101,7 +100,7 @@ exports.server = function _listen(ready) {
 
     req.on('data', (chunk) => chunks.push(chunk));
     req.on('end', (chunk) => {
-      if (chunk) chunks.push(chunk);
+      if (chunk) { chunks.push(chunk); }
       req.body = Buffer.concat(chunks).toString('utf8');
 
       if (handlers.hasOwnProperty(req.url)) {
@@ -155,6 +154,7 @@ exports.server = function _listen(ready) {
   };
 
   server.listen(0, '127.0.0.1', () => ready(server.address().port));
+
   return server;
 };
 
