@@ -59,6 +59,13 @@ Config.defaults({
     timestamp: false,
     colorize: true
   }
+  // log: {
+  //   level: 'info',
+  //   colorize: false,
+  //   timestamp: true,
+  //   json: true,
+  //   stringify: true
+  // }
 });
 
 require('../lib/log');
