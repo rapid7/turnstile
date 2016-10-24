@@ -1,4 +1,0 @@
-[submodule "docs"]
-	path = docs
-	url = https://github.com/rapid7/turnstile.git
-	branch = gh-pages
