@@ -18,12 +18,20 @@ const expect = require('chai').expect;
  * Testing stubs for HTTP.IncomingMessage and HTTP.ServerResponse
  */
 class IncomingMessage extends require('stream').PassThrough {
-  constructor() {
+  constructor(request) {
+    request = Object.assign({
+      method: 'GET',
+      url: '/default/test/path'
+    }, request);
+
+    request.headers = Object.assign({}, {
+      'content-type': request.type,
+      'content-length': Buffer.byteLength(request.body, 'utf8')
+    }, request.headers);
+
     super();
 
-    this.method = 'GET';
-    this.url = '/after/it';
-    this.headers = {};
+    Object.assign(this, request);
   }
 }
 
@@ -65,7 +73,7 @@ class ServerResponse extends require('stream').PassThrough {
 
     this.ended = true;
     this.body = Buffer.concat(this.chunks).toString('utf8');
-    this.handler();
+    this.handler(this);
   }
 }
 
@@ -153,7 +161,7 @@ exports.server = function _listen(ready) {
 exports.request = function _request(path, request) {
   const emitter = new EventEmitter();
   const req = new IncomingMessage();
-  const res = new ServerResponse(() => emitter.emit('response', res));
+  const res = new ServerResponse((_res) => emitter.emit('response', _res, req));
 
   req.method = request.METHOD;
   req.url = path;
@@ -165,9 +173,92 @@ exports.request = function _request(path, request) {
   setImmediate(() => {
     emitter.emit('request', req, res);
 
-    req.write(request.BODY);
+    if (request.BODY) {
+      req.write(request.BODY);
+    }
+
     req.end();
   });
 
   return emitter;
+};
+
+/**
+ * Wraps stub request and response instances and a promise for testing
+ * HTTP Server request handlers
+ */
+class Bench {
+  /**
+   * @constructor
+   * @param {Object}  request A set of parameters for the request
+   * @param {Function}  handle  The HTTP request handler
+   */
+  constructor(request, handle) {
+    this.promise = new Promise((resolve) => {
+      const req = new IncomingMessage(request);
+      const res = new ServerResponse(() => resolve([req, res]));
+
+      setImmediate(() => {
+        handle(req, res);
+
+        if (request.BODY) { req.write(request.BODY); }
+        req.end();
+      });
+    });
+  }
+
+  /**
+   * Attach a post-response handler to the test bench for assertions
+   * @param {Function}  handle  Accepts standard `(request, response)` handler arguments
+   * @return  {Bench} self
+   */
+  response(handle) {
+    this.promise = this.promise.then((args) => handle(args[0], args[1]));
+
+    return this;
+  }
+
+  /**
+   * Add resolved/rejected handlers to the underlying promise
+   * @param {Function}  resolved  Receives an array `[request, response]` as the success argument
+   * @param {Function}  rejected  Error handler
+   * @return  {Bench} self
+   */
+  then(resolved, rejected) {
+    this.promise = this.promise.then(resolved, rejected);
+
+    return this;
+  }
+
+  /**
+   * Add a rejected handler to the underlying promise
+   * @param {Function}  rejected  Error handler
+   * @return  {Bench} self
+   */
+  catch(rejected) {
+    this.promise = this.promise.catch(rejected);
+
+    return this;
+  }
+
+  /**
+   * Attach the same handler to resolve and reject
+   *
+   * This is a helper for `next([err])` interfaces, where a callback
+   * must be called at the end of the routine, with an optional argument
+   * indicating that an error occurred.
+   *
+   * @param {Function}  handle
+   * @return  {Bench} self
+   */
+  finally(handle) {
+    this.then(() => handle());
+    this.catch((err) => handle(err));
+
+    return this;
+  }
+}
+
+exports.bench = function(request, handler) {
+  return new Bench(request, handler);
 };
