@@ -1,0 +1,9 @@
+name: Turnstile
+description: HTTP access control proxy
+url: https://rapid7.github.io/turnstile
+
+markdown: kramdown
+
+collections:
+  pages:
+    output: true

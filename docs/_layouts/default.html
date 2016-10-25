@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+
+  <title>Turnstile - {{ page.title }}</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+</head>
+
+<body>
+
+  <nav class="navbar navbar-fixed-top navbar-dark bg-inverse">
+    <div class="container">
+      <a class="navbar-brand" href="/">Turnstile</a>
+      <div class="nav navbar-nav pull-right">
+        <a href="https://travis-ci.org/rapid7/turnstile" target="_blank">
+          <img src="https://travis-ci.org/rapid7/turnstile.svg?branch=master">
+        </a>
+        <a href="https://coveralls.io/github/rapid7/turnstile?branch=master" target="_blank">
+          <img src="https://coveralls.io/repos/github/rapid7/turnstile/badge.svg?branch=master">
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-9">
+        {{ page.content }}
+      </div>
+      <div class="col-sm-3">
+        <div class="card push-5-rem">
+          <a class="list-group-item{% if page.title == 'Home' %} active{% endif %}" href="/">Home</a>
+          {% for p in site.pages %}
+          <a class="list-group-item{% if page.title == p.title %} active{% endif %}" href="{{ p.url }}">{{ p.title }}</a>
+          {% endfor %}
+        </div>
+
+        <div class="card">
+          <div class="list-group list-group-flush">
+            <a class="list-group-item" href="/jsdoc">
+              <i class="fa fa-lg fa-book"></i>&nbsp;JSDoc</a>
+            <a class="list-group-item" href="/coverage/lcov-report">
+              <i class="fa fa-lg fa-pie-chart"></i>&nbsp;Coverage Report</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="list-group list-group-flush">
+            <a class="list-group-item" href="https://github.com/rapid7/turnstile" target="_blank">
+              <i class="fa fa-lg fa-github"></i>&nbsp;Source</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- JavaScript -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js"></script>
+    <script src="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/js/bootstrap.js"></script>
+</body>
+
+</html>
