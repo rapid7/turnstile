@@ -11,10 +11,11 @@
   "description": "Access-control proxy service for APIs",
   "scripts": {
     "test": "mocha",
-    "cover": "rm -Rf coverage/* && istanbul cover _mocha",
-    "doc": "rm -Rf doc/jsdoc && jsdoc -c .jsdoc.json lib",
+    "cover": "rm -Rf docs/coverage && istanbul cover _mocha",
+    "doc": "rm -Rf docs/jsdoc && jsdoc -c .jsdoc.json lib",
     "lint": "eslint bin/* lib/* test/*.js test/**/*.js",
-    "report": "coveralls < ./coverage/lcov.info"
+    "report": "coveralls < ./docs/coverage/lcov.info",
+    "clean": "rm -rf docs/jsdoc docs/coverage docs/_site"
   },
   "repository": {
     "type": "git",
