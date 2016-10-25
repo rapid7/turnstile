@@ -28,17 +28,16 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "coveralls": "^2.11.9",
-    "eslint": "^1.10.3",
-    "eslint-config-airbnb": "^3.1.0",
-    "eslint-config-rapid7": "0.0.15",
-    "eslint-plugin-rapid7": "^5.0.1",
-    "eslint-plugin-react": "^3.14.0",
+    "eslint": "^3.6.1",
+    "eslint-config-rapid7": "^2.4.0",
+    "eslint-plugin-import": "^2.0.1",
     "istanbul": "^0.4.3",
     "jsdoc": "^3.4.0",
     "mocha": "^2.4.5"
   },
   "dependencies": {
     "nconf": "^0.8.4",
+    "node-libuuid": "^2.0.0",
     "winston": "^2.2.0"
   }
 }

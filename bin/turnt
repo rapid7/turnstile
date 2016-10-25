@@ -1,0 +1,247 @@
+#!/usr/bin/env node
+'use strict';
+
+const Crypto = require('crypto');
+const FS = require('fs');
+const HTTP = require('http');
+const HTTPS = require('https');
+const Path = require('path');
+const Signature = require('../lib/signature');
+const URL = require('url');
+
+global.Config = require('nconf');
+
+Config.argv({
+  config: {
+    alias: 'c',
+    describe: 'Path to local turnstile configuration'
+  },
+  method: {
+    alias: 'X',
+    describe: 'HTTP request method',
+    default: 'GET'
+  },
+  payload: {
+    alias: 'd',
+    describe: 'HTTP request payload',
+    default: false
+  },
+  digest: {
+    describe: 'Digest signing scheme',
+    default: 'sha256'
+  },
+  header: {
+    alias: 'H',
+    array: true,
+    describe: 'HTTP request headers'
+  },
+  output: {
+    alias: 'o',
+    describe: 'Write output to a file',
+    default: false
+  },
+
+  identity: {
+    alias: 'u',
+    demand: true,
+    describe: 'Identity key for the request'
+  },
+  secret: {
+    alias: 'p',
+    demand: true,
+    describe: 'Secret key for the request'
+  }
+});
+
+Config.defaults({
+  log: {
+    json: false,
+    timestamp: false,
+    colorize: true
+  }
+});
+
+require('../lib/log');
+
+/**
+ * Load request data from STDIN, a file, or from the argument value
+ * @param  {String} payload The value of the `-d/--payload` flag. A `-` indicates
+ *                          that data should be read from STDIN, while a leading `@`
+ *                          indicates that the rest of the value is the path to a
+ *                          file that should be read.
+ * @return {Promise}
+ */
+function read(payload) {
+  return new Promise(function(resolve, reject) {
+    if (typeof payload !== 'string') {
+      return resolve(false);
+    }
+
+    switch (payload[0]) {
+    case '-': // Read from STDIN
+      const data = [];
+
+      process.stdin.on('data', (chunk) => data.push(chunk));
+      process.stdin.on('end', () => resolve(Buffer.concat(data)));
+      break;
+
+    case '@': // Read from a file
+      FS.readFile(Path.resolve(__dirname, payload.slice(1)), (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+
+        resolve(data);
+      });
+      break;
+
+    default: // Convert argument value to a buffer
+      resolve(Buffer.from(payload, 'utf8'));
+    }
+  });
+}
+
+/**
+ * Generate a digest signature for the request's headers
+ *
+ * @param  {String} algorithm Hash algorithm
+ * @param  {Buffer} payload   Request body
+ * @return {String}           Base64-encoded hash signature
+ */
+function digest(algorithm, payload) {
+  const hash = Crypto.createHash(algorithm);
+
+  return new Promise(function(resolve) {
+    if (payload) {
+      hash.update(payload);
+    }
+
+    resolve(hash.digest('base64'));
+  });
+}
+
+/**
+ * Make an HTTP[S] request
+ *
+ * @param  {Object} protocol An HTTP provider for the request
+ * @param  {Object} params Request parameters. @see {@link https://nodejs.org/
+ *                         dist/latest-v4.x/docs/api/http.html#http_http_request_options_callback}
+ * @return {Promise}
+ */
+function request(protocol, params) {
+  const algorithm = Config.get('digest');
+
+  return read(Config.get('payload'))
+    .then((payload) => {
+      return (params.payload = payload);
+    })
+    .then((payload) => digest(algorithm, payload))
+    .then((signature) => {
+      params.headers.digest = `${algorithm}=${signature}`;
+    })
+    .then(() => {
+      const signature = new Signature('sha256', params);
+
+      signature.sign(Config.get('secret'));
+      Log.debug(`Request: identity ${params.identity}`);
+      Log.debug(`Request: signature ${signature.signature}`);
+
+      const authorization = Buffer(`${params.identity}:${signature.signature}`, 'utf8').toString('base64');
+
+      params.headers.authorization = `Rapid7-HMAC-V1-SHA256 ${authorization}`;
+      Log.debug(`Request: authorization ${params.headers.authorization}`);
+    })
+    .then(() => new Promise(function(resolve, reject) {
+      const req = protocol.request(params);
+
+      req.on('abort', () => reject());
+      req.on('aborted', () => reject());
+      req.on('error', (err) => reject(err));
+      req.on('response', (res) => {
+        const chunks = [];
+
+        Log.debug(`Response: HTTP/1.1 ${res.statusCode} ${res.statusMessage}`);
+        Object.keys(res.headers).forEach((header) => {
+          Log.debug(`Response: header ${header}: ${res.headers[header]}`);
+        });
+
+        res.on('data', (chunk) => chunks.push(chunk));
+        res.on('end', () => {
+          const payload = Buffer.concat(chunks);
+
+          res.payload = payload.toString('utf8');
+          Log.debug(`Response: received ${payload.length} bytes`);
+
+          resolve(res);
+        });
+      });
+
+      req.setHeader('Content-Length',
+        params.payload ? params.payload.length : 0);
+
+      Log.debug(`Request: ${params.method} ${params.path} HTTP/1.1`);
+      Object.keys(params.headers).forEach((header) => {
+        Log.debug(`Request: header ${header}: ${params.headers[header]}`);
+      });
+
+      if (params.payload) {
+        Log.debug(`Request: sending ${params.payload.length} bytes`);
+        req.write(params.payload);
+      }
+
+      req.end();
+    }));
+}
+
+const date = new Date();
+const url = Config.get('_')[0];
+const params = URL.parse(url);
+
+params.method = Config.get('method');
+params.headers = {
+  date: date.toString(),
+  host: params.host,
+  'user-agent': `node-${process.version}/turnstile-tester`
+};
+
+// Select HTTP[S] provider
+const protocol = params.protocol === 'https:' ? HTTPS : HTTP;
+
+// Remove extra/overriding request parameters
+delete params.protocol;
+delete params.auth;
+delete params.host;
+delete params.pathname;
+delete params.query;
+delete params.search;
+delete params.hash;
+delete params.href;
+
+// Round date to the nearest seconds for signing
+params.date = new Date(date);
+params.date.setMilliseconds(0);
+
+params.identity = Config.get('identity');
+
+request(protocol, params)
+  .then((res) => new Promise(function(resolve, reject) {
+    const output = Config.get('output');
+
+    if (!output) {
+      process.stdout.write(res.payload);
+
+      return resolve();
+    }
+
+    if (res.payload.length > 0) {
+      FS.writeFile(output, res.payload, (err) => {
+        if (err) {
+          return reject(err);
+        }
+
+        Log.info(`Wrote ${res.payload.length} bytes to ${output}`);
+        resolve();
+      });
+    }
+  }))
+  .catch((err) => Log.error(err));

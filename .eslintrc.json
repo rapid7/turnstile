@@ -1,13 +1,14 @@
 {
-  "plugins": [
-    "rapid7"
-  ],
-  "extends": "rapid7",
   "globals": {
     "Config": true,
     "Log": true
   },
-  "env": {
-    "node": true
+  "plugins": ["import"],
+  "extends": [
+    "rapid7/base",
+    "rapid7/rules/node"
+  ],
+  "rules": {
+    "arrow-body-style": 0
   }
 }

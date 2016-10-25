@@ -24,6 +24,10 @@ end
 package 'nodejs'
 #######################
 
+## node-libuuid support
+package 'build-essential'
+package 'uuid-dev'
+
 node.default['turnstile']['version'] = cookbook_version
 
 group node['turnstile']['group'] do
@@ -38,33 +42,15 @@ user node['turnstile']['user'] do
   home node['turnstile']['paths']['directory']
 end
 
-directory node['turnstile']['paths']['directory'] do
-  owner node['turnstile']['user']
-  group node['turnstile']['group']
-  mode '0755'
-
-  recursive true
-end
-
-## Fetch and install turnstile
-remote_file 'turnstile' do
-  source Turnstile::Helpers.github_download('rapid7', 'turnstile', node['turnstile']['version'])
-  path ::File.join(Chef::Config['file_cache_path'], "turnstile-#{node['turnstile']['version']}.deb")
-
-  action :create_if_missing
-  backup false
-end
-
-package 'turnstile' do
-  source resources('remote_file[turnstile]').path
-  provider Chef::Provider::Package::Dpkg
+case node['turnstile']['install'].to_sym
+when :github_release then include_recipe "#{cookbook_name}::_install_github_release"
+when :github_ref then include_recipe "#{cookbook_name}::_install_github_ref"
+when :local then include_recipe "#{cookbook_name}::_install_local"
+else Chef::Application.fatal!("Unhanded Turnstile installation method #{node['turnstile']['install']}")
 end
 
 ## Upstart Service
 template '/etc/init/turnstile.conf' do
-  owner node['turnstile']['user']
-  group node['turnstile']['group']
-
   source 'upstart.conf.erb'
   variables(
     :description => 'turnstile configuration service',
@@ -74,13 +60,12 @@ template '/etc/init/turnstile.conf' do
       "-c #{node['turnstile']['paths']['configuration']}"
     ]
   )
+
+  notifies :restart, 'service[turnstile]' if node['turnstile']['enable']
 end
 
 directory 'turnstile-configuration-directory' do
   path ::File.dirname(node['turnstile']['paths']['configuration'])
-
-  owner node['turnstile']['user']
-  group node['turnstile']['group']
   mode '0755'
 
   recursive true
@@ -90,15 +75,12 @@ template 'turnstile-configuration' do
   path node['turnstile']['paths']['configuration']
   source 'json.erb'
 
-  owner node['turnstile']['user']
-  group node['turnstile']['group']
+  variables :properties => node['turnstile']['config']
 
-  variables(:properties => node['turnstile']['config'])
+  notifies :restart, 'service[turnstile]' if node['turnstile']['enable']
 end
 
 service 'turnstile' do
-  ## The wrapping cookbook must call `action` on this resource to start/enable
-  action :nothing
-
+  action node['turnstile']['enable'] ? [:start, :enable] : [:stop, :disable]
   provider Chef::Provider::Service::Upstart
 end
