@@ -9,3 +9,7 @@ gem 'mime-types', '~> 3.1'
 group :cookbook do
   gem 'builderator', '~> 1.0'
 end
+
+group :docs do
+  gem 'github-pages'
+end
