@@ -68,7 +68,7 @@ describe('lib/control/layer', function layer() {
     });
 
     app.use(function middleware(_req, _res, _next) {
-      done(Error('Control should not have entered next middleware'));
+      throw Error('Control should not have entered next middleware');
     });
 
     HTTP.bench(fixture.REQUEST, (req, res) => app(req, res))

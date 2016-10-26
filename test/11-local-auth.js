@@ -46,11 +46,12 @@ describe('lib/provider/local', function() {
       });
 
       HTTP.bench(missingHeaders, (req, res) => validateWrapper(req, res))
-        .then(() => done(Error('Validation should have failed')))
-        .catch((err) => {
-          expect(err).to.be.instanceof(Errors.RequestError);
-          expect(err.message).to.equal('Missing header authorization');
-        })
+        .then(
+          () => { throw Error('Validation should have failed'); },
+          (err) => {
+            expect(err).to.be.instanceof(Errors.RequestError);
+            expect(err.message).to.equal('Missing header authorization');
+          })
         .finally(done);
     });
 
@@ -62,21 +63,23 @@ describe('lib/provider/local', function() {
       });
 
       HTTP.bench(invalidDate, (req, res) => validateWrapper(req, res))
-        .then(() => done(Error('Validation should have failed')))
-        .catch((err) => {
-          expect(err).to.be.instanceof(Errors.RequestError);
-          expect(err.message).to.equal('Invalid Date header');
-        })
+        .then(
+          () => { throw Error('Validation should have failed'); },
+          (err) => {
+            expect(err).to.be.instanceof(Errors.RequestError);
+            expect(err.message).to.equal('Invalid Date header');
+          })
         .finally(done);
     });
 
     it('fails if the date header is more than SKEW ms from Now', function(done) {
       HTTP.bench(fixture, (req, res) => validateWrapper(req, res))
-        .then(() => done(Error('Validation should have failed')))
-        .catch((err) => {
-          expect(err).to.be.instanceof(Errors.AuthorizationError);
-          expect(err.message).to.equal('Request date skew is too large');
-        })
+        .then(
+          () => { throw Error('Validation should have failed'); },
+          (err) => {
+            expect(err).to.be.instanceof(Errors.AuthorizationError);
+            expect(err.message).to.equal('Request date skew is too large');
+          })
         .finally(done);
     });
   });
@@ -90,11 +93,12 @@ describe('lib/provider/local', function() {
       });
 
       HTTP.bench(invalidAuth, (req, res) => authorizationWrapper(req, res))
-        .then(() => done(Error('Validation should have failed')))
-        .catch((err) => {
-          expect(err).to.be.instanceof(Errors.RequestError);
-          expect(err.message).to.equal('Invalid Authorization header');
-        })
+        .then(
+          () => { throw Error('Validation should have failed'); },
+          (err) => {
+            expect(err).to.be.instanceof(Errors.RequestError);
+            expect(err.message).to.equal('Invalid Authorization header');
+          })
         .finally(done);
     });
 
@@ -106,11 +110,12 @@ describe('lib/provider/local', function() {
       });
 
       HTTP.bench(invalidAuth, (req, res) => authorizationWrapper(req, res))
-        .then(() => done(Error('Validation should have failed')))
-        .catch((err) => {
-          expect(err).to.be.instanceof(Errors.AuthorizationError);
-          expect(err.message).to.equal('Invalid authentication protocol Rapid7-HMAC-V1-FOOBAR');
-        })
+        .then(
+          () => { throw Error('Validation should have failed'); },
+          (err) => {
+            expect(err).to.be.instanceof(Errors.AuthorizationError);
+            expect(err.message).to.equal('Invalid authentication protocol Rapid7-HMAC-V1-FOOBAR');
+          })
         .finally(done);
     });
 
@@ -122,11 +127,12 @@ describe('lib/provider/local', function() {
       });
 
       HTTP.bench(invalidAuth, (req, res) => authorizationWrapper(req, res))
-        .then(() => done(Error('Validation should have failed')))
-        .catch((err) => {
-          expect(err).to.be.instanceof(Errors.AuthorizationError);
-          expect(err.message).to.equal('Invalid authentication parameters');
-        })
+        .then(
+          () => { throw Error('Validation should have failed'); },
+          (err) => {
+            expect(err).to.be.instanceof(Errors.AuthorizationError);
+            expect(err.message).to.equal('Invalid authentication parameters');
+          })
         .finally(done);
     });
 
