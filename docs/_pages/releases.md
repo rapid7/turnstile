@@ -1,9 +1,13 @@
 ---
 layout: default
-title: Releasing
+title: Releases
 ---
 
 # {{ page.title }}
+
+Releases are published to [GitHub](https://github.com/rapid7/turnstile/releases) with tarball and DEB package artifacts
+
+## Perform a Releases
 
 To perform a release do the following:
 
