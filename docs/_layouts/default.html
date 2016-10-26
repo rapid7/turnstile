@@ -36,15 +36,17 @@
       </div>
       <div class="col-sm-3">
         <div class="card push-5-rem">
-          <a class="list-group-item{% if page.title == 'Home' %} active{% endif %}" href="/">Home</a>
+          <a class="list-group-item{% if page.title == 'Home' %} active{% endif %}" href="/">
+            <i class="fa fa-lg fa-home"></i>&nbsp;Home</a>
           {% for p in site.pages %}
-          <a class="list-group-item{% if page.title == p.title %} active{% endif %}" href="{{ p.url }}">{{ p.title }}</a>
+          <a class="list-group-item{% if page.title == p.title %} active{% endif %}" href="{{ p.url }}">
+            <i class="fa fa-lg fa-file-text"></i>&nbsp;{{ p.title }}</a>
           {% endfor %}
         </div>
 
         <div class="card">
           <div class="list-group list-group-flush">
-            <a class="list-group-item" href="/jsdoc">
+            <a class="list-group-item" href="https://doclets.io/rapid7/turnstile">
               <i class="fa fa-lg fa-book"></i>&nbsp;JSDoc</a>
             <a class="list-group-item" href="https://coveralls.io/github/rapid7/turnstile">
               <i class="fa fa-lg fa-pie-chart"></i>&nbsp;Coverage Report</a>
