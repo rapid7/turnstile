@@ -33,7 +33,6 @@ class IncomingMessage extends require('stream').PassThrough {
     Object.assign(this, request);
   }
 }
-
 exports.IncomingMessage = IncomingMessage;
 
 class ServerResponse extends require('stream').PassThrough {
@@ -75,18 +74,7 @@ class ServerResponse extends require('stream').PassThrough {
     this.handler(this);
   }
 }
-
 exports.ServerResponse = ServerResponse;
-
-/**
- * Generate a random HTTP path string
- *
- * @return {String}
- */
-function makePath() {
-  return '/' + Crypto.randomBytes(32).toString('hex');
-}
-exports.path = makePath;
 
 /**
  * Stub server for client testing
@@ -94,7 +82,7 @@ exports.path = makePath;
  * @param {Function}  ready
  * @return {HTTP.Server}
  */
-exports.server = function _listen(ready) {
+exports.server = function() {
   const server = HTTP.createServer(function handler(req, res) {
     const chunks = [];
 
@@ -121,29 +109,29 @@ exports.server = function _listen(ready) {
 
   const handlers = server.handlers = {};
 
-  server.handle = function _handle(handler) {
-    const path = makePath();
+  server.handle = function(handler) {
+    const path = '/' + Crypto.randomBytes(32).toString('hex');
 
     if (handler instanceof Function) {
       handlers[path] = handler;
     } else if (handler instanceof Object) {
       // Treat `handler` as a Fixture
       handlers[path] = function _handler(req, res) {
-        expect(req.method).to.equal(handler.REQUEST.METHOD);
+        expect(req.method).to.equal(handler.REQUEST.method);
         expect(req.url).to.equal(path);
-        expect(req.headers).to.contain.keys({'content-type': handler.REQUEST.TYPE});
+        expect(req.headers).to.contain.keys({'content-type': handler.REQUEST.type});
         expect(req.headers).to.contain.keys('content-length');
-        expect(req.body).to.equal(handler.REQUEST.BODY);
+        expect(req.body).to.equal(handler.REQUEST.body);
 
-        if (handler.RESPONSE.BODY) {
-          res.setHeader('content-length', Buffer.byteLength(handler.RESPONSE.BODY, 'utf8'));
+        if (handler.RESPONSE.body) {
+          res.setHeader('content-length', Buffer.byteLength(handler.RESPONSE.body, 'utf8'));
         }
 
-        res.setHeader('content-type', handler.RESPONSE.TYPE);
-        res.writeHead(handler.RESPONSE.CODE);
+        res.setHeader('content-type', handler.RESPONSE.type);
+        res.writeHead(handler.RESPONSE.code);
 
-        if (handler.RESPONSE.BODY) {
-          res.write(handler.RESPONSE.BODY, 'utf8');
+        if (handler.RESPONSE.body) {
+          res.write(handler.RESPONSE.body, 'utf8');
         }
 
         res.end();
@@ -153,34 +141,11 @@ exports.server = function _listen(ready) {
     return path;
   };
 
-  server.listen(0, '127.0.0.1', () => ready(server.address().port));
-
-  return server;
-};
-
-exports.request = function _request(path, request) {
-  const emitter = new EventEmitter();
-  const req = new IncomingMessage();
-  const res = new ServerResponse((_res) => emitter.emit('response', _res, req));
-
-  req.method = request.METHOD;
-  req.url = path;
-  req.headers = {
-    'content-type': request.TYPE,
-    'content-length': Buffer.byteLength(request.BODY, 'utf8')
+  server.start = function(ready) {
+    server.listen(0, '127.0.0.1', () => ready(server.address().port));
   };
 
-  setImmediate(() => {
-    emitter.emit('request', req, res);
-
-    if (request.BODY) {
-      req.write(request.BODY);
-    }
-
-    req.end();
-  });
-
-  return emitter;
+  return server;
 };
 
 /**
@@ -194,15 +159,19 @@ class Bench {
    * @param {Function}  handle  The HTTP request handler
    */
   constructor(request, handle) {
-    this.promise = new Promise((resolve) => {
+    this.promise = new Promise((resolve, reject) => {
       const req = new IncomingMessage(request);
       const res = new ServerResponse(() => resolve([req, res]));
 
       setImmediate(() => {
-        handle(req, res);
+        try {
+          handle(req, res);
 
-        if (request.BODY) { req.write(request.BODY); }
-        req.end();
+          if (request.body) { req.write(request.body); }
+          req.end();
+        } catch (err) {
+          reject(err);
+        }
       });
     });
   }

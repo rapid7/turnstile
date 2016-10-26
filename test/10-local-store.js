@@ -3,9 +3,16 @@
 require('./resource/config');
 
 const Errors = require('../lib/errors');
-const Fixtures = require('./resource/fixtures');
 const Local = require('../lib/provider/local');
 const expect = require('chai').expect;
+
+/*
+ * Matches parameters in the keys.json resource
+ */
+const fixture = {
+  key: '7bf9708aa51b7f7859d0e68b6b62b8ab',
+  secret: '6jzQ+NyqY7PwOFpipttvbp53baOI/bqGdn4DMc2ALN2v3+rcNYWz/T4r+jORJHBq'
+};
 
 describe('lib/local/store', function storage() {
   describe('Events', function events() {
@@ -41,8 +48,8 @@ describe('lib/local/store', function storage() {
     });
 
     it('`lookup` returns a secret when it is called with a valid key', function behavior() {
-      expect(() => db.lookup(Fixtures.DB.KEY)).to.not.throw();
-      expect(db.lookup(Fixtures.DB.KEY)).to.equal(Fixtures.DB.SECRET);
+      expect(() => db.lookup(fixture.key)).to.not.throw();
+      expect(db.lookup(fixture.key)).to.equal(fixture.secret);
     });
   });
 });

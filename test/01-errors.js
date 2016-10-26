@@ -37,10 +37,8 @@ describe('lib/errors', function errors() {
 
       expect(error.code).to.equal(400);
       expect(error.name).to.equal('BadRequest');
-      expect(error.message).to.equal('Bad Request');
-      expect(error.metadata).to.eql({
-        reason: REASON
-      });
+      expect(error.message).to.equal(REASON);
+      expect(error.metadata).to.eql({});
     });
   });
 
@@ -51,10 +49,8 @@ describe('lib/errors', function errors() {
 
       expect(error.code).to.equal(401);
       expect(error.name).to.equal('Unauthorized');
-      expect(error.message).to.equal('Unauthorized');
-      expect(error.metadata).to.eql({
-        reason: REASON
-      });
+      expect(error.message).to.equal(REASON);
+      expect(error.metadata).to.eql({});
     });
   });
 
@@ -64,7 +60,7 @@ describe('lib/errors', function errors() {
 
       expect(error.code).to.equal(404);
       expect(error.name).to.equal('NotFound');
-      expect(error.message).to.equal('Not Found');
+      expect(error.message).to.equal('GET /after/it');
       expect(error.metadata).to.eql({
         method: 'GET',
         path: '/after/it'
