@@ -20,7 +20,7 @@ $ cd docs
 $ bundle exec jekyll serve
 ```
 
-and navigate a browser to [http://127.0.0.1:4000/](http://127.0.0.1:4000/)
+and navigate a browser to [http://127.0.0.1:4000/](http://127.0.0.1:4000{{ site.baseurl }}/)
 
 ## Adding Documentation
 
