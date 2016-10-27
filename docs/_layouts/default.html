@@ -9,7 +9,7 @@
   <title>Turnstile - {{ page.title }}</title>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="{{ site.baseurl }}/css/main.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
 </head>
 
@@ -17,7 +17,7 @@
 
   <nav class="navbar navbar-fixed-top navbar-dark bg-inverse">
     <div class="container">
-      <a class="navbar-brand" href="/">Turnstile</a>
+      <a class="navbar-brand" href="{{ site.baseurl }}/">Turnstile</a>
       <div class="nav navbar-nav pull-right">
         <a href="https://travis-ci.org/rapid7/turnstile" target="_blank">
           <img src="https://travis-ci.org/rapid7/turnstile.svg?branch=master">
@@ -36,10 +36,10 @@
       </div>
       <div class="col-sm-3">
         <div class="card push-5-rem">
-          <a class="list-group-item{% if page.title == 'Home' %} active{% endif %}" href="/">
+          <a class="list-group-item{% if page.title == 'Home' %} active{% endif %}" href="{{ site.baseurl }}/">
             <i class="fa fa-lg fa-home"></i>&nbsp;Home</a>
           {% for p in site.pages %}
-          <a class="list-group-item{% if page.title == p.title %} active{% endif %}" href="{{ p.url }}">
+          <a class="list-group-item{% if page.title == p.title %} active{% endif %}" href="{{ site.baseurl }}{{ p.url }}">
             <i class="fa fa-lg fa-file-text"></i>&nbsp;{{ p.title }}</a>
           {% endfor %}
         </div>
