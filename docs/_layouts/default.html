@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta http-equiv="x-ua-compatible" content="ie=edge">
 
-  <title>Turnstile - {{ page.title }}</title>
+  <title>{{ site.name }} - {{ page.title }}</title>
 
   <!-- CSS -->
   <link rel="stylesheet" href="{{ site.baseurl }}/css/main.css">
@@ -17,7 +17,7 @@
 
   <nav class="navbar navbar-fixed-top navbar-dark bg-inverse">
     <div class="container">
-      <a class="navbar-brand" href="{{ site.baseurl }}/">Turnstile</a>
+      <a class="navbar-brand" href="{{ site.baseurl }}/">{{ site.name }}</a>
       <div class="nav navbar-nav pull-right">
         <a href="https://travis-ci.org/{{ site.project.owner }}/{{ site.project.repo }}" target="_blank">
           <img src="https://travis-ci.org/{{ site.project.owner }}/{{ site.project.repo }}.svg?branch=master">
