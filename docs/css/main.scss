@@ -17,8 +17,22 @@ body {
   padding-top: 5rem;
 }
 
-.push-5-rem {
-  margin-top: 5rem;
+.right-nav {
+  @extend .col-sm-3;
+  margin-top: 3rem;
+
+  .link {
+    @extend .list-group-item;
+  }
+
+  .link-active {
+    @extend .list-group-item;
+    @extend .active;
+  }
+}
+
+.main-content {
+  @extend .col-sm-9;
 }
 
 .highlight {

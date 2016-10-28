@@ -1,6 +1,9 @@
 ---
 layout: default
 title: Signing Specification
+
+icon: lock
+order: 200
 ---
 
 # {{ page.title }}
