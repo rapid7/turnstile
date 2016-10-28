@@ -1,6 +1,9 @@
 ---
 layout: default
 title: CLI
+
+icon: terminal
+order: 110
 ---
 
 # {{ page.title }}

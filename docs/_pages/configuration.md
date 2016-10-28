@@ -1,19 +1,18 @@
 ---
 layout: default
-title: Home
+title: Configuration
+
+icon: cog
+order: 100
 ---
 
-# Turnstile
-
-Turnstile is an HTTP(S) proxy that implements authentication and authorization controls for any HTTP API service. The goal of the project is to support pluggable providers for authentication, authorization-policy, rate-limiting, and logging/audit enforcement.
-
-## Usage and Configuration
+# {{ page.title }}
 
 The Turnstile server can load configuration from JSON. Pass the path of a JSON file that should be load with the `-c` flag:
 
 `./bin/server -c conf/production.json`
 
-The following are supported parameters and their defaults:
+Paths may be absolute or relative to the process's working directory. The following are supported parameters and their defaults:
 
 ```
 {
