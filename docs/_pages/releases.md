@@ -25,7 +25,7 @@ $ npm version minor
 $ bundle exec rake default
 ```
 
-To create new releases and artifacts on [github.com], you must set the following environment variables set with a valid user ID and token with the appropriate repository permissions:
+To create new GitHub releases and artifacts, you must set the following environment variables set with a valid user ID and token with the appropriate repository permissions:
 
 * `GITHUB_CLIENT_ID`
 * `GITHUB_CLIENT_TOKEN`
@@ -67,8 +67,7 @@ order: 200
 
 Pages are rendered by Jekyll and can include [Liquid template] tags and filters.
 
-[GitHub Releases]: https://github.com/rapid7/turnstile/releases
+[GitHub Releases]: https://github.com/{{ site.project.owner }}/{{ site.project.repo }}/releases
 [npm-version]: https://docs.npmjs.com/cli/version
-[github.com]: https://www.github.com
 [Font Awesome]: http://fontawesome.io/icons/
 [Liquid template]: https://jekyllrb.com/docs/templates/

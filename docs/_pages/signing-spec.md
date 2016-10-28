@@ -63,7 +63,7 @@ The custom `Rapid7-HMAC-V1-SHA256` HTTP Authorization scheme is an HMAC-SHA256 s
                        instance-digest LF
                        additional-headers)
 
-##### Method and Request-URI
+#### Method and Request-URI
 
 HTTP request Method and Request-URI are the primary directional factors that a server uses to route a request. Signatures MUST be explicitly bound to a single Method/Request-URI.
 
@@ -73,13 +73,13 @@ _NOTE that the Request-URI includes both path and query components._ While some 
 
 `request-uri` is the byte-value `Request-URI` from the signed request's `Request-Line` as defined in [RFC 2616] Section 5.1.2. The `request-uri` MUST be passed into the challenge structure as it was received off of or written to the wire, e.g. no normalization has occurred, the query filed has not been parsed and/or reordered, and no URL encoding/decoding has been performed upon the string.
 
-##### Host Header
+#### Host Header
 
 The Host header is required for all HTTP/1.1 requests. It MAY be used by load balancers or proxies to route the request to the correct server instance or cluster, thus the signature MUST be explicitly bound to a single Host resource:
 
 `host-header` is the byte-value of the `field-value` of the Host header from the signed request as defined in [RFC 2616] Section 14.23. Similar to the `request-uri`, the `field-value` of the host header should be signed as it was received off of or written to the wire.
 
-##### Date Header
+#### Date Header
 
 A signature MUST have a bounded validity window on the order of minutes. The exact skew limit MAY vary depending upon how closely Clients' and Servers' clocks can be synchronized. Clients MUST include a date header with second precision as defined by [RFC 2616] Section 3.3.1:
 
@@ -93,13 +93,13 @@ NOTE that this conversion ensures consistency across language's HTTP implementat
 
 NOTE that some languages' Date libraries may generate millisecond-precision epoch timestamps by default, while others only generate second-precision values. Requiring conversion to milliseconds rather than seconds generally implies multiplication, which should not result in loss of precision in floating-point implementations, while division _may_ result in loss of precision that would invalidate the signature in non-deterministic ways.
 
-##### Key Identity
+#### Key Identity
 
 A Key Identity is bound 1-to-1 to a Key Secret used by the HMAC algorithm to sign the challenge body. While extremely unlikely under normal circumstances, it is possible for two Key Identities are provisioned with the same secret. There are also an array of conceivable degradation attacks in which an attacker could deplete or manipulate a VM's entropy pool and raise the probability of secret collisions to an exploitable level.
 
 To counter this vector, the signature MUST be explicitly bound to its Key Identity. `key-identity` is the Client's Key Identity string.
 
-##### Instance Digest
+#### Instance Digest
 
 Requests MUST include an [RFC 3230 Section 4.3.2] compliant Digest header:
 
@@ -113,7 +113,7 @@ Algorithms known to be easily manipulated MUST be banned by service implementati
 
 The signature MUST include the `instance-digest` field.
 
-##### Additional Headers
+#### Additional Headers
 
 Some HTTP services may utilize additional headers to alter request processing. These services SHOULD require that any headers other than the Host and Date headers that alter request handling be included in the signature's `additional-header-data` field.
 
