@@ -24,10 +24,6 @@ end
 package 'nodejs'
 #######################
 
-## node-libuuid support
-package 'build-essential'
-package 'uuid-dev'
-
 node.default['turnstile']['version'] = cookbook_version
 
 group node['turnstile']['group'] do

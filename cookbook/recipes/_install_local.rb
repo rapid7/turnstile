@@ -12,6 +12,10 @@ Chef::Application.fatal!(
   "Mount the Turnstile application at #{node['turnstile']['paths']['directory']}"
 ) unless ::Dir.exist?(node['turnstile']['paths']['directory'])
 
+## node-libuuid support
+package 'build-essential'
+package 'uuid-dev'
+
 execute 'npm install' do
   command '/usr/bin/npm install'
   cwd node['turnstile']['paths']['directory']

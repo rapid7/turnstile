@@ -33,6 +33,10 @@ execute 'extract source' do
   notifies :run, 'execute[npm install]', :immediate
 end
 
+## node-libuuid support
+package 'build-essential'
+package 'uuid-dev'
+
 ## Install module dependencies
 execute 'npm install' do
   command '/usr/bin/npm install'
