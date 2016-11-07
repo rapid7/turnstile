@@ -15,26 +15,36 @@ Turnstile is an HTTP(S) proxy that implements authentication and authorization c
 
 Turnstile is a NodeJS application. It requires [NodeJS v4, `>= 4.6.1`](https://nodejs.org/dist/v4.6.1/) to be installed.
 
-### Install
+### Debian/Ubuntu
 
-**Debian/Ubuntu**
-
-Fetch a release DEB package from [GitHub Releases] and install with `dpkg`:
+Fetch a release `deb` package from [GitHub Releases] and install with `dpkg`:
 
 ```bash
 $ sudo dpkg -l turnstile_VERSION_amd64.deb
 ```
 
-**Others**
+### Other x86_64 Linux
 
-* Fetch and unpack a release artifact from [GitHub Releases]
+Fetch and unpack a `tzg` release artifact from [GitHub Releases]
 
-  ```bash
-  $ mkdir /opt/turnstile
-  $ tar -xzf turnstile_VERSION.tgz --strip-components 1 -C /opt/turnstile
-  ```
+```bash
+$ mkdir /opt/turnstile
+$ tar -xzf turnstile_VERSION.tgz -C /opt/turnstile
+```
 
-* Run `npm install` in the unpacked source directory
+**Note** Turnstile depends upon [node-libuuid], which is statically linked to `uuid.c`. The released artifacts were built on `x86_64` Linux platforms, and will likely only run in similar environments.
+
+### From Source
+
+Fetch and unpack a `Source code` release artifact from [GitHub Releases]. This is a tarball/zip of the tagged commit on GitHub that was used to generate the x86_64 artifacts.
+
+**Note** Your system must have `uuid.h` and `uuid.c` in its include path. On Ubuntu 14.04, the `uuid-dev` package provides these sources.
+
+```bash
+$ mkdir /opt/turnstile
+$ tar -xzf VERSION.tgz --strip-components 1 -C /opt/turnstile
+$ cd /opt/turnstile && npm install
+```
 
 ### Configure
 
@@ -62,7 +72,7 @@ $ sudo dpkg -l turnstile_VERSION_amd64.deb
   }
   ```
 
-  Turnstile does not care about the length or format of either the ID or Secret strings, but both should be of suitable length and randomness as to make brute-force attacks unfeasible. Encoding limitations of client consumers should also be considered.
+  **Note** Turnstile does not care about the length or format of either the ID or Secret strings, but both should be of suitable length and randomness as to make brute-force attacks unfeasible. Encoding limitations of client consumers should also be considered.
 
 ### Run It
 
@@ -73,3 +83,4 @@ $ /opt/turnstile/bin/server -c PATH/To/config.json
 :tada:
 
 [GitHub Releases]: https://github.com/rapid7/turnstile/releases
+[node-libuuid]: https://www.npmjs.com/package/node-libuuid
