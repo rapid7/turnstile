@@ -12,4 +12,6 @@ end
 
 group :docs do
   gem 'github-pages'
+  gem 'jemoji'
+  gem 'rouge'
 end

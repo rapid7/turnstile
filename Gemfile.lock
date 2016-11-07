@@ -372,9 +372,11 @@ DEPENDENCIES
   builderator (~> 1.0)
   fpm (~> 1.6)
   github-pages
+  jemoji
   mime-types (~> 3.1)
   octokit (~> 4.0)
   rake (~> 10.5)
+  rouge
 
 BUNDLED WITH
-   1.13.2
+   1.13.6
