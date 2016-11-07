@@ -28,6 +28,6 @@ A request payload can be passed in several ways:
 * `-d @path/to/file.json` will read from a file on disk
 * `-d -` will read from STDIN, e.g.
 
-  ```
+  ```bash
   foo_command | jq '.query.to.get.stuff' | turnt 'http://localhost:9300/path' -d -
   ```

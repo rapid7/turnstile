@@ -14,7 +14,7 @@ The Turnstile server can load configuration from JSON. Pass the path of a JSON f
 
 Paths may be absolute or relative to the process's working directory. The following are supported parameters and their defaults:
 
-```
+```javascript
 {
   /*
    * Set the front-end port and listen address
