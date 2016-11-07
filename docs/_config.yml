@@ -10,6 +10,14 @@ baseurl: /turnstile
 
 markdown: kramdown
 
+kramdown:
+  input: GFM
+  hard_wrap: false
+  syntax_highlighter: rouge
+
 collections:
   pages:
     output: true
+
+gems:
+  - jemoji

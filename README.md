@@ -8,7 +8,7 @@ _An HTTP proxy service to add role-based access control to any REST-like API._
 
 Turnstile is a minimalistic middleware server that applies consistent access control policies to any HTTP service with path-based routing. The goal of the project is to support pluggable providers for authentication, authorization-policy, rate-limiting, and logging/reporting.
 
-Detailed documentation is available in the repository's [GitHub Pages](https://rapid7.github.io/turnstile)
+[Detailed documentation is available on the repository's GitHub Pages site](https://rapid7.github.io/turnstile)
 
 ## Releasing
 
