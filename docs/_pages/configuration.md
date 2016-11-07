@@ -10,7 +10,9 @@ order: 100
 
 The Turnstile server can load configuration from JSON. Pass the path of a JSON file that should be load with the `-c` flag:
 
-`./bin/server -c conf/production.json`
+```bash
+./bin/server -c conf/production.json
+```
 
 Paths may be absolute or relative to the process's working directory. The following are supported parameters and their defaults:
 
