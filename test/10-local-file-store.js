@@ -17,11 +17,11 @@ const fixture = {
 describe('lib/local/store', function storage() {
   describe('Events', function events() {
     it('emits `update` after the data file is loaded', function behavior(done) {
-      new Local.Store(Config.get('local:db')).once('update', done);
+      new Local.FileStore(Config.get('local:db')).once('update', done);
     });
 
     it('responds to a reload SIGNAL', function behavior(done) {
-      new Local.Store(Config.get('local:db')).once('update', function updated() {
+      new Local.FileStore(Config.get('local:db')).once('update', function updated() {
         // This is only called after the DB is initially loaded.
         this.once('update', done);
 
@@ -31,7 +31,7 @@ describe('lib/local/store', function storage() {
     });
 
     it('emits `error` if a data file can not be loaded', function behavior(done) {
-      new Local.Store({
+      new Local.FileStore({
         path: 'foo/bar.json'
       }).once('error', function error(err) {
         expect(err).to.be.an('error');
@@ -41,7 +41,7 @@ describe('lib/local/store', function storage() {
   });
 
   describe('Methods', function methods() {
-    const db = new Local.Store(Config.get('local:db'));
+    const db = new Local.FileStore(Config.get('local:db'));
 
     it('throws an error when `lookup` is called with an invalid key', function behavior() {
       expect(() => db.lookup('bogus key')).to.throw(Errors.AuthorizationError);
