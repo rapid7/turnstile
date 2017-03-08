@@ -1,0 +1,51 @@
+#!/usr/bin/env node
+'use strict';
+
+global.Config = require('nconf').env()
+  .argv({
+    config: {
+      alias: 'c',
+      describe: 'Path to local turnstile configuration'
+    }
+  });
+
+if (Config.get('config')) {
+  Config.file(require('path').resolve(process.cwd(), Config.get('config')));
+}
+
+Config.defaults({
+  log: {
+    json: true,
+    timestamp: false,
+    colorize: false
+  }
+});
+
+require('../lib/log');
+
+const port = Config.get('service:port') || 7085;
+const host = Config.get('service:hostname') || 'localhost';
+
+const error = (err) => Log.error(err);
+
+require('http').createServer((req, res) => {
+  const headers = req.headers;
+  const method = req.method;
+  const url = req.url;
+  const body = [];
+
+  // Error handling
+  res.on('error', error);
+  req.on('error', error);
+
+  req.on('data', (chunk) => body.push(chunk));
+  req.on('end', () => {
+    const data = Buffer.concat(body).toString();
+    const resp = {headers, method, url, data};
+
+    Log.info('Request', resp);
+
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    res.end(JSON.stringify(resp));
+  });
+}).listen(port, host, () => Log.info(`Listening on ${host}:${port}`));
