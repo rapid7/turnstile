@@ -34,7 +34,8 @@
     "eslint-plugin-import": "~2.0.1",
     "istanbul": "~0.4.3",
     "jsdoc": "~3.4.0",
-    "mocha": "~2.4.5"
+    "mocha": "~2.4.5",
+    "nock": "^9.0.9"
   },
   "dependencies": {
     "nconf": "~0.8.4",
