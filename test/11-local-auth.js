@@ -23,7 +23,7 @@ const fixture = {
   headers: {
     host: 'localhost',
     date: 'Thu Mar 24 2016 00:17:57 GMT-0400 (EDT)',
-    digest: 'sha256=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=',
+    digest: 'SHA256=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=',
     authorization: `Rapid7-HMAC-V1-SHA256 ${authorization}`
   }
 };

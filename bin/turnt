@@ -28,7 +28,7 @@ Config.argv({
   },
   digest: {
     describe: 'Digest signing scheme',
-    default: 'sha256'
+    default: 'SHA256'
   },
   header: {
     alias: 'H',
@@ -129,7 +129,7 @@ function digest(algorithm, payload) {
  * @return {Promise}
  */
 function request(protocol, params) {
-  const algorithm = Config.get('digest');
+  const algorithm = Config.get('digest').toUpperCase();
 
   return read(Config.get('payload'))
     .then((payload) => {
@@ -140,7 +140,7 @@ function request(protocol, params) {
       params.headers.digest = `${algorithm}=${signature}`;
     })
     .then(() => {
-      const signature = new Signature('sha256', params);
+      const signature = new Signature(algorithm, params);
 
       signature.sign(Config.get('secret'));
       Log.debug(`Request: identity ${params.identity}`);
@@ -148,7 +148,7 @@ function request(protocol, params) {
 
       const authorization = Buffer(`${params.identity}:${signature.signature}`, 'utf8').toString('base64');
 
-      params.headers.authorization = `Rapid7-HMAC-V1-SHA256 ${authorization}`;
+      params.headers.authorization = `Rapid7-HMAC-V1-${algorithm} ${authorization}`;
       Log.debug(`Request: authorization ${params.headers.authorization}`);
     })
     .then(() => new Promise(function(resolve, reject) {
