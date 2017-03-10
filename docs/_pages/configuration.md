@@ -54,7 +54,7 @@ Paths may be absolute or relative to the process's working directory. The follow
     /*
      * Configure the HMAC signing algorithm and maximum date-header skew
      */
-    algorithm: 'sha256',
+    algorithm: 'SHA256',
     skew: 1000
   },
 
