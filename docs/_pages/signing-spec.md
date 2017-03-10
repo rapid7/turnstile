@@ -105,11 +105,13 @@ Requests MUST include an [RFC 3230 Section 4.3.2] compliant Digest header:
 
     digest-header := ("Digest" ":" instance-digest)
     instance-digest := (algorithm "=" signature)
-    algorithm := "sha1" | "sha256" | "sha512"
+    algorithm := "SHA1" | "SHA256" | "SHA512"
 
-The Digest header's field-value  includes both the algorithm and the generated signature value. This allows the Client and Server to negotiate the algorithm used to generate the digest signature.
+The Digest header's field-value includes both the algorithm and the generated signature value. This allows the Client and Server to negotiate the algorithm used to generate the digest signature.
 
 Algorithms known to be easily manipulated MUST be banned by service implementations.
+
+The algorithm MUST be specified in UPPERCASE.
 
 The signature MUST include the `instance-digest` field.
 
