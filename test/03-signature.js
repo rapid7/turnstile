@@ -13,13 +13,13 @@ const fixture = {
   date: new Date('Thu Mar 24 2016 00:17:57 GMT-0400 (EDT)'),
   headers: {
     host: 'localhost',
-    digest: 'sha256=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='
+    digest: 'SHA256=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='
   },
   identity: '7bf9708aa51b7f7859d0e68b6b62b8ab'
 };
 
 const secret = '6jzQ+NyqY7PwOFpipttvbp53baOI/bqGdn4DMc2ALN2v3+rcNYWz/T4r+jORJHBq';
-const signed = 'AuICfpC1IcSBDoFYh/wjc+pgsmfd2t8EGng+n0FK3Tk=';
+const signed = 'GRilc5yXm7NO7h+XF0KhjifIgtE+dJn+9UOotMIEYZo=';
 
 describe('lib/signature', function() {
   const signature = new Signature(Config.get('local:algorithm'), fixture);

@@ -15,7 +15,7 @@ Config.defaults({
       path: Path.join(__dirname, '/keys.json'),
       signal: 'SIGHUP'
     },
-    algorithm: 'sha256',
+    algorithm: 'SHA256',
     skew: 5000
   },
   service: {
