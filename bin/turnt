@@ -199,7 +199,7 @@ const params = URL.parse(url);
 
 params.method = Config.get('method');
 params.headers = {
-  date: date.toString(),
+  date: date.toUTCString(),
   host: params.host,
   'user-agent': `node-${process.version}/turnstile-tester`
 };
