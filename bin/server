@@ -5,10 +5,12 @@ const Errors = require('../lib/errors');
 const SUPPORTED_ALGORITHMS = ['SHA256', 'SHA512'];
 
 require('../lib/config');
-if (['SHA256', 'SHA512'].filter((a) => a === Config.get('local:algorithm').toUpperCase()).length === 0) {
-  const message = `Turnstile currently supports the following encryption algorithms: ${SUPPORTED_ALGORITHMS.join(', ')}`;
+const algorithm = Config.get('local:algorithm');
 
-  throw new Errors.UnsupportedAlgorithmError(message, Config.get('local:algorithm').toUpperCase());
+if (SUPPORTED_ALGORITHMS.indexOf(algorithm.toUpperCase()) === -1) {
+  const message = `Turnstile currently supports the following encryption algorithms: ${SUPPORTED_ALGORITHMS.join(', ')}. You specified ${algorithm}.`;
+
+  throw new Errors.UnsupportedAlgorithmError(message, algorithm.toUpperCase());
 }
 
 require('../lib/log');
