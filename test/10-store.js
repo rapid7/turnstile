@@ -1,10 +1,18 @@
 'use strict';
 
-require('./resource/config');
+const Path = require('path');
 
 const Errors = require('../lib/errors');
 const Local = require('../lib/provider/local');
 const expect = require('chai').expect;
+
+/*
+ * Mock local config object
+ */
+const db = {
+  path: Path.join(__dirname, 'resource/keys.json'),
+  signal: 'SIGHUP'
+};
 
 /*
  * Matches parameters in the keys.json resource
@@ -16,12 +24,8 @@ const fixture = {
 
 describe('lib/local/store', function storage() {
   describe('Events', function events() {
-    it('emits `update` after the data file is loaded', function behavior(done) {
-      new Local.Store(Config.get('local:db')).once('update', done);
-    });
-
     it('responds to a reload SIGNAL', function behavior(done) {
-      new Local.Store(Config.get('local:db')).once('update', function updated() {
+      Local.Store(db).once('update', function updated() {
         // This is only called after the DB is initially loaded.
         this.once('update', done);
 
@@ -29,27 +33,18 @@ describe('lib/local/store', function storage() {
         process.emit('SIGHUP');
       });
     });
-
-    it('emits `error` if a data file can not be loaded', function behavior(done) {
-      new Local.Store({
-        path: 'foo/bar.json'
-      }).once('error', function error(err) {
-        expect(err).to.be.an('error');
-        done();
-      });
-    });
   });
 
   describe('Methods', function methods() {
-    const db = new Local.Store(Config.get('local:db'));
+    const dbImpl = Local.Store(db);
 
     it('throws an error when `lookup` is called with an invalid key', function behavior() {
-      expect(() => db.lookup('bogus key')).to.throw(Errors.AuthorizationError);
+      expect(() => dbImpl.lookup('bogus key')).to.throw(Errors.AuthorizationError);
     });
 
     it('`lookup` returns a secret when it is called with a valid key', function behavior() {
-      expect(() => db.lookup(fixture.key)).to.not.throw();
-      expect(db.lookup(fixture.key)).to.equal(fixture.secret);
+      expect(() => dbImpl.lookup(fixture.key)).to.not.throw();
+      expect(dbImpl.lookup(fixture.key)).to.equal(fixture.secret);
     });
   });
 });
