@@ -14,8 +14,9 @@ if (SUPPORTED_ALGORITHMS.indexOf(algorithm.toUpperCase()) === -1) {
 }
 
 require('../lib/log');
+const express = require('express');
+const app = express();
 
-const app = require('../lib/control/layer').create();
 const server = require('http').createServer(app);
 
 // Only attach the correlation ID middleware if it's enabled
