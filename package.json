@@ -35,7 +35,8 @@
     "istanbul": "~0.4.3",
     "jsdoc": "~3.4.0",
     "mocha": "~2.4.5",
-    "nock": "^9.0.9"
+    "nock": "^9.0.9",
+    "node-mocks-http": "^1.6.1"
   },
   "dependencies": {
     "body-parser": "^1.17.1",
