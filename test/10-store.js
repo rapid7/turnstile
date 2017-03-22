@@ -18,7 +18,7 @@ const db = {
  * Matches parameters in the keys.json resource
  */
 const fixture = {
-  key: '7bf9708aa51b7f7859d0e68b6b62b8ab',
+  identity: '7bf9708aa51b7f7859d0e68b6b62b8ab',
   secret: '6jzQ+NyqY7PwOFpipttvbp53baOI/bqGdn4DMc2ALN2v3+rcNYWz/T4r+jORJHBq'
 };
 
@@ -43,8 +43,8 @@ describe('lib/local/store', function storage() {
     });
 
     it('`lookup` returns a secret when it is called with a valid key', function behavior() {
-      expect(() => dbImpl.lookup(fixture.key)).to.not.throw();
-      expect(dbImpl.lookup(fixture.key)).to.equal(fixture.secret);
+      expect(() => dbImpl.lookup(fixture)).to.not.throw();
+      expect(dbImpl.lookup(fixture)).to.equal(fixture.secret);
     });
   });
 });
