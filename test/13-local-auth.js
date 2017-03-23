@@ -18,7 +18,7 @@ const body = 'the contents of the request body';
 const algorithm = 'SHA256';
 const hash = Crypto.createHash(algorithm);
 
-hash.update(body);
+hash.update(body, 'utf8');
 const signature = hash.digest('base64');
 
 const authorization = Buffer.from(`${identity}:${signed}`, 'utf8').toString('base64');
@@ -101,7 +101,7 @@ describe('lib/provider/local', function() {
       const body = 'this is my body, there are many like it but this one is mine';
       const hash = Crypto.createHash('SHA256');
 
-      hash.update(body);
+      hash.update(body, 'utf8');
       const signature = hash.digest('base64');
 
       const validDigest = Object.assign({}, fixture, {
