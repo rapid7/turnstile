@@ -9,10 +9,17 @@ const Errors = require('../lib/errors');
 const Controller = require('../lib/provider/local');
 const Signature = require('../lib/signature');
 const expect = require('chai').expect;
+const Crypto = require('crypto');
 
 const identity = '7bf9708aa51b7f7859d0e68b6b62b8ab';
 const secret = '6jzQ+NyqY7PwOFpipttvbp53baOI/bqGdn4DMc2ALN2v3+rcNYWz/T4r+jORJHBq';
 const signed = 'AuICfpC1IcSBDoFYh/wjc+pgsmfd2t8EGng+n0FK3Tk=';
+const body = 'the contents of the request body';
+const algorithm = 'SHA256';
+const hash = Crypto.createHash(algorithm);
+
+hash.update(body);
+const signature = hash.digest('base64');
 
 const authorization = Buffer.from(`${identity}:${signed}`, 'utf8').toString('base64');
 
@@ -23,9 +30,10 @@ const fixture = {
   headers: {
     host: 'localhost',
     date: 'Thu Mar 24 2016 00:17:57 GMT-0400 (EDT)',
-    digest: 'SHA256=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=',
+    digest: `${algorithm}=${signature}`,
     authorization: `Rapid7-HMAC-V1-SHA256 ${authorization}`
-  }
+  },
+  body
 };
 
 function validateWrapper(req, res) {
@@ -35,6 +43,11 @@ function validateWrapper(req, res) {
 
 function authorizationWrapper(req, res) {
   Controller.authorization(req);
+  res.end();
+}
+
+function digestWrapper(req, res) {
+  Controller.digest('SHA256', req);
   res.end();
 }
 
@@ -69,6 +82,36 @@ describe('lib/provider/local', function() {
         expect(err).to.be.instanceof(Errors.AuthorizationError);
         expect(err.message).to.equal('Request date skew is too large');
       });
+    });
+  });
+
+  describe('digest validation', function() {
+    it('fails if the request body does not match the digest header', function() {
+      const invalidDigest = Object.assign({}, fixture, {
+        body: 'this is my body, there are many like it but this one is mine'
+      });
+
+      return HTTP.bench(invalidDigest, (req, res) => digestWrapper(req, res)).catch((err) => {
+        expect(err).to.be.instanceof(Errors.AuthorizationError);
+        expect(err.message).to.equal('Digest header does not match request body');
+      });
+    });
+
+    it('passes if the request body matches the digest header', function() {
+      const body = 'this is my body, there are many like it but this one is mine';
+      const hash = Crypto.createHash('SHA256');
+
+      hash.update(body);
+      const signature = hash.digest('base64');
+
+      const validDigest = Object.assign({}, fixture, {
+        body,
+        headers: Object.assign({}, fixture.headers, {
+          digest: `${algorithm}=${signature}`
+        })
+      });
+
+      return HTTP.bench(validDigest, (req, res) => digestWrapper(req, res));
     });
   });
 
