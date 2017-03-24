@@ -148,86 +148,23 @@ exports.server = function() {
   return server;
 };
 
-/**
- * Wraps stub request and response instances and a promise for testing
- * HTTP Server request handlers
- */
-class Bench {
-  /**
-   * @constructor
-   * @param {Object}  request A set of parameters for the request
-   * @param {Function}  handle  The HTTP request handler
-   */
-  constructor(request, handle) {
-    this.promise = new Promise((resolve, reject) => {
-      const req = new IncomingMessage(request);
-      const res = new ServerResponse(() => resolve([req, res]));
-
-      setImmediate(() => {
-        try {
-          handle(req, res);
-
-          if (request.body) { req.write(request.body); }
-          req.end();
-        } catch (err) {
-          reject(err);
-        }
-      });
-    });
-  }
-
-  /**
-   * Attach a post-response handler to the test bench for assertions
-   * @param {Function}  handle  Accepts standard `(request, response)` handler arguments
-   * @return  {Bench} self
-   */
-  response(handle) {
-    this.promise = this.promise.then((args) => handle(args[0], args[1]));
-
-    return this;
-  }
-
-  /**
-   * Add resolved/rejected handlers to the underlying promise
-   * @param {Function}  resolved  Receives an array `[request, response]` as the success argument
-   * @param {Function}  rejected  Error handler
-   * @return  {Bench} self
-   */
-  then(resolved, rejected) {
-    this.promise = this.promise.then(resolved, rejected);
-
-    return this;
-  }
-
-  /**
-   * Add a rejected handler to the underlying promise
-   * @param {Function}  rejected  Error handler
-   * @return  {Bench} self
-   */
-  catch(rejected) {
-    this.promise = this.promise.catch(rejected);
-
-    return this;
-  }
-
-  /**
-   * Attach the same handler to resolve and reject
-   *
-   * This is a helper for `next([err])` interfaces, where a callback
-   * must be called at the end of the routine, with an optional argument
-   * indicating that an error occurred.
-   *
-   * @param {Function}  handle
-   * @return  {Bench} self
-   */
-  finally(handle) {
-    this.then(() => handle());
-    this.catch((err) => handle(err));
-
-    return this;
-  }
-}
-
 exports.bench = function(request, handler) {
-  return new Bench(request, handler);
+  return new Promise((resolve, reject) => {
+    const req = new IncomingMessage(request);
+    const res = new ServerResponse(() => resolve([req, res]));
+
+    setImmediate(() => {
+      try {
+        handler(req, res);
+
+        if (request.body) {
+          req.write(request.body);
+        }
+
+        req.end();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
 };
