@@ -4,6 +4,7 @@ const Path = require('path');
 require('./resource/config');
 
 const Local = require('../lib/provider/local');
+const Resource = require('./resource');
 const expect = require('chai').expect;
 
 const db = {
@@ -12,6 +13,9 @@ const db = {
 };
 
 describe('lib/local/file_store', function storage() {
+  // Cleanup process event listeners
+  afterEach(Resource.cleanup);
+
   describe('Events', function events() {
     it('emits `update` after the data file is loaded', function behavior(done) {
       const store = Local.Store(db);

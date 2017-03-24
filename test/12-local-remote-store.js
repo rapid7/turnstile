@@ -4,6 +4,7 @@ require('./resource/config');
 
 const Errors = require('../lib/errors');
 const Local = require('../lib/provider/local');
+const Resource = require('./resource');
 const expect = require('chai').expect;
 const nock = require('nock');
 
@@ -21,6 +22,9 @@ const resp = {};
 resp[key] = secret;
 
 describe('lib/local/remote_store', function storage() {
+  // Cleanup process event listeners
+  afterEach(Resource.cleanup);
+
   nock('http://localhost:9100')
     .persist()
     .get('/v1/properties/turnstile.keys')
