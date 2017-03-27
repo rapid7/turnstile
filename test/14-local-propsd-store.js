@@ -41,80 +41,46 @@ describe('lib/local/propsd_store', function storage() {
     .get('/v1/properties/malformed')
     .reply(200, 'this is a malformed property');
 
-  describe('Events', function events() {
-    it('emits `update` after the keys are loaded from Propsd', function behavior(done) {
-      Local.Store(defaultPropsdOpts).once('update', done);
-    });
-
-    it('emits `error` if keys can not be loaded', function behavior(done) {
-      Local.Store(Object.assign({}, defaultPropsdOpts, {
-        path: 'http://localhost:9100/v1/properties/not.keys'
-      })).once('error', function error(err) {
-        expect(err).to.be.an.instanceOf(Error);
-        done();
-      });
-    });
-  });
-
   describe('Keys', function() {
-    it('parses keys correctly from a Propsd endpoint', function(done) {
-      const propsd = Local.Store(defaultPropsdOpts);
-
-      propsd.once('update', () => {
-        expect(propsd.keys).to.eql(fixture);
-        done();
-      });
-    });
-
     it('emits `error` if Propsd data is malformed', function(done) {
-      Local.Store(Object.assign({}, defaultPropsdOpts, {
+      const propsd = Local.Store(Object.assign({}, defaultPropsdOpts, {
         path: 'http://localhost:9100/v1/properties/malformed'
       })).once('error', (err) => {
         expect(err).to.be.an.instanceOf(Error);
         done();
       });
+
+      propsd.lookup({identity: 'some-service-in-us-east-1', identifier: 'some-uuid'});
     });
 
-    it('removes a key prefix if one is defined', function(done) {
-      const propsd = Local.Store(Object.assign({}, defaultPropsdOpts, {
+    it('removes a key prefix if one is defined', function() {
+      return Local.Store(Object.assign({}, defaultPropsdOpts, {
         path: 'http://localhost:9100/v1/properties/prefixed',
         prefix: 'prefix.'
-      }));
+      })).lookup({identity: 'some-service-in-us-east-1', identifier: 'some-uuid'}).then((key) => {
+        expect(key).to.equal(prefixedFixture['prefix.some-service-in-us-east-1']);
+      });
+    });
+  });
+  describe('Lookup', function() {
+    const scope = nock('http://localhost:9200')
+      .persist()
+      .get('/v2/properties')
+      .reply(200, fixture);
 
-      propsd.once('update', () => {
-        expect(propsd.keys).to.eql(fixture);
-        done();
+    it('returns a key on lookup if that key is available in Propsd', function() {
+      return Local.Store(Object.assign({}, defaultPropsdOpts, {
+        path: 'http://localhost:9200/v2/properties'
+      })).lookup({identity: 'some-service-in-us-east-1', identifier: 'some-uuid'}).then((keys) => {
+        expect(keys).to.equal(fixture['some-service-in-us-east-1']);
       });
     });
 
-    describe('Lookup', function() {
-      const scope = nock('http://localhost:9200')
-        .persist()
-        .get('/v2/properties')
-        .reply(200, fixture);
-
-      it('returns a key on lookup if that key is available in Propsd', function() {
-        const propsd = Local.Store(Object.assign({}, defaultPropsdOpts, {
-          path: 'http://localhost:9200/v2/properties'
-        }));
-
-        propsd.once('update', () => {
-          return propsd.lookup({identity: 'some-service-in-us-east-1', identifier: 'some-uuid'}).then((keys) => {
-            expect(keys).to.equal(fixture['some-service-in-us-east-1']);
-          });
-        });
-      });
-
-      it('emits `error` if a client tries to authorize with a key that isn\'t available in Prosd', function() {
-        const propsd = Local.Store(Object.assign({}, defaultPropsdOpts, {
-          path: 'http://localhost:9200/v2/properties'
-        }));
-
-        propsd.once('update', () => {
-          return propsd.lookup({identity: 'some-other-service-in-us-east-1', identifier: 'some-uuid'}).catch((err) => {
-            expect(err).to.be.instanceof(Errors.AuthorizationError);
-          });
-        });
+    it('emits `error` if a client tries to authorize with a key that isn\'t available in Prosd', function() {
+      return Local.Store(Object.assign({}, defaultPropsdOpts, {
+        path: 'http://localhost:9200/v2/properties'
+      })).lookup({identity: 'some-other-service-in-us-east-1', identifier: 'some-uuid'}).catch((err) => {
+        expect(err).to.be.instanceof(Errors.AuthorizationError);
       });
     });
   });
