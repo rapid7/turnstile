@@ -39,12 +39,15 @@ describe('lib/local/store', function storage() {
     const dbImpl = Local.Store(db);
 
     it('throws an error when `lookup` is called with an invalid key', function behavior() {
-      expect(() => dbImpl.lookup('bogus key')).to.throw(Errors.AuthorizationError);
+      return dbImpl.lookup('bogus key').catch((err) => {
+        expect(err).to.be.instanceof(Errors.AuthorizationError);
+      });
     });
 
     it('`lookup` returns a secret when it is called with a valid key', function behavior() {
-      expect(() => dbImpl.lookup(fixture)).to.not.throw();
-      expect(dbImpl.lookup(fixture)).to.equal(fixture.secret);
+      return dbImpl.lookup(fixture).then((key) => {
+        expect(key).to.equal(fixture.secret);
+      });
     });
   });
 });

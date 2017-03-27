@@ -19,6 +19,14 @@ const prefixedFixture = {
   'prefix.some-service-in-us-west-1': secret
 };
 
+const defaultPropsdOpts = {
+  path: 'http://localhost:9100/v1/properties',
+  signal: 'SIGHUP',
+  propsd: true,
+  prefix: '',
+  delimiter: ''
+};
+
 describe('lib/local/propsd_store', function storage() {
   // Cleanup process event listeners
   afterEach(Resource.cleanup);
@@ -34,23 +42,13 @@ describe('lib/local/propsd_store', function storage() {
 
   describe('Events', function events() {
     it('emits `update` after the keys are loaded from Propsd', function behavior(done) {
-      Local.Store({
-        path: 'http://localhost:9100/v1/properties',
-        signal: 'SIGHUP',
-        propsd: true,
-        prefix: '',
-        delimiter: ''
-      })
-          .once('update', done);
+      Local.Store(defaultPropsdOpts).once('update', done);
     });
 
     it('emits `error` if keys can not be loaded', function behavior(done) {
-      Local.Store({
-        path: 'http://localhost:9100/v1/properties/not.keys',
-        propsd: true,
-        prefix: '',
-        delimiter: ''
-      }).once('error', function error(err) {
+      Local.Store(Object.assign({}, defaultPropsdOpts, {
+        path: 'http://localhost:9100/v1/properties/not.keys'
+      })).once('error', function error(err) {
         expect(err).to.be.an.instanceOf(Error);
         done();
       });
@@ -59,12 +57,7 @@ describe('lib/local/propsd_store', function storage() {
 
   describe('Keys', function() {
     it('parses keys correctly from a Propsd endpoint', function(done) {
-      const propsd = Local.Store({
-        path: 'http://localhost:9100/v1/properties',
-        propsd: true,
-        prefix: '',
-        delimiter: ''
-      });
+      const propsd = Local.Store(defaultPropsdOpts);
 
       propsd.once('update', () => {
         expect(propsd.keys).to.eql(fixture);
@@ -73,24 +66,20 @@ describe('lib/local/propsd_store', function storage() {
     });
 
     it('emits `error` if Propsd data is malformed', function(done) {
-      Local.Store({
-        path: 'http://localhost:9100/v1/properties/malformed',
-        propsd: true,
-        prefix: '',
-        delimiter: ''
-      }).once('error', (err) => {
+      Local.Store(Object.assign({}, defaultPropsdOpts, {
+        path: 'http://localhost:9100/v1/properties/malformed'
+        })).once('error', (err) => {
         expect(err).to.be.an.instanceOf(Error);
         done();
       });
     });
 
     it('removes a key prefix if one is defined', function(done) {
-      const propsd = Local.Store({
+      const propsd = Local.Store(Object.assign({}, defaultPropsdOpts, {
         path: 'http://localhost:9100/v1/properties/prefixed',
-        propsd: true,
         prefix: 'prefix',
         delimiter: '.'
-      });
+      }));
 
       propsd.once('update', () => {
         expect(propsd.keys).to.eql(fixture);
