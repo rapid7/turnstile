@@ -88,43 +88,31 @@ describe('lib/local/propsd_store', function storage() {
     });
 
     describe('Lookup', function() {
-      it('checks for new keys if a client tries to authorize with a key it doesn\'t recognize', function(done) {
-        const scope = nock('http://localhost:9200')
-          .get('/v1/properties')
-          .reply(200, fixture)
-          .get('/v1/properties')
-          .reply(200, Object.assign({}, fixture, {
-            'some-other-service-in-us-east-1': secret
-          }));
+      const scope = nock('http://localhost:9200')
+        .persist()
+        .get('/v2/properties')
+        .reply(200, fixture);
 
-        const propsd = Local.Store(Object.assign({}, defaultPropsdOpts, {
-          path: 'http://localhost:9200/v1/properties'
-        }));
-
-        propsd.once('update', () => {
-          propsd.lookup({identity: 'some-other-service-in-us-east-1', identifier: 'some-uuid'}).then((key) => {
-            expect(scope.isDone()).to.be.true;
-            done();
-          }).catch(done);
-        });
-      });
-
-      it('emits `error` if a client tries to authorize with a key it doesn\'t recognize and that key isn\'t available' +
-      ' in prosd', function(done) {
-        const scope = nock('http://localhost:9200')
-          .get('/v2/properties')
-          .reply(200, fixture)
-          .get('/v2/properties')
-          .reply(200, fixture);
-
+      it('returns a key on lookup if that key is available in Propsd', function() {
         const propsd = Local.Store(Object.assign({}, defaultPropsdOpts, {
           path: 'http://localhost:9200/v2/properties'
         }));
 
         propsd.once('update', () => {
-          propsd.lookup({identity: 'some-other-service-in-us-east-1', identifier: 'some-uuid'}).catch((err) => {
+          return propsd.lookup({identity: 'some-service-in-us-east-1', identifier: 'some-uuid'}).then((keys) => {
+            expect(keys).to.equal(fixture['some-service-in-us-east-1']);
+          });
+        });
+      });
+
+      it('emits `error` if a client tries to authorize with a key that isn\'t available in Prosd', function() {
+        const propsd = Local.Store(Object.assign({}, defaultPropsdOpts, {
+          path: 'http://localhost:9200/v2/properties'
+        }));
+
+        propsd.once('update', () => {
+          return propsd.lookup({identity: 'some-other-service-in-us-east-1', identifier: 'some-uuid'}).catch((err) => {
             expect(err).to.be.instanceof(Errors.AuthorizationError);
-            done();
           });
         });
       });
