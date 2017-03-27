@@ -78,8 +78,7 @@ describe('lib/local/propsd_store', function storage() {
     it('removes a key prefix if one is defined', function(done) {
       const propsd = Local.Store(Object.assign({}, defaultPropsdOpts, {
         path: 'http://localhost:9100/v1/properties/prefixed',
-        prefix: 'prefix',
-        delimiter: '.'
+        prefix: 'prefix.'
       }));
 
       propsd.once('update', () => {
