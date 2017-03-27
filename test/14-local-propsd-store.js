@@ -2,6 +2,7 @@
 
 require('./resource/config');
 
+const Errors = require('../lib/errors');
 const Local = require('../lib/provider/local');
 const expect = require('chai').expect;
 const nock = require('nock');
@@ -31,7 +32,7 @@ describe('lib/local/propsd_store', function storage() {
   // Cleanup process event listeners
   afterEach(Resource.cleanup);
 
-  nock('http://localhost:9100')
+  const scope = nock('http://localhost:9100')
     .persist()
     .get('/v1/properties')
     .reply(200, fixture)
@@ -68,7 +69,7 @@ describe('lib/local/propsd_store', function storage() {
     it('emits `error` if Propsd data is malformed', function(done) {
       Local.Store(Object.assign({}, defaultPropsdOpts, {
         path: 'http://localhost:9100/v1/properties/malformed'
-        })).once('error', (err) => {
+      })).once('error', (err) => {
         expect(err).to.be.an.instanceOf(Error);
         done();
       });
@@ -84,6 +85,49 @@ describe('lib/local/propsd_store', function storage() {
       propsd.once('update', () => {
         expect(propsd.keys).to.eql(fixture);
         done();
+      });
+    });
+
+    describe('Lookup', function() {
+      it('checks for new keys if a client tries to authorize with a key it doesn\'t recognize', function(done) {
+        const scope = nock('http://localhost:9200')
+          .get('/v1/properties')
+          .reply(200, fixture)
+          .get('/v1/properties')
+          .reply(200, Object.assign({}, fixture, {
+            'some-other-service-in-us-east-1': secret
+          }));
+
+        const propsd = Local.Store(Object.assign({}, defaultPropsdOpts, {
+          path: 'http://localhost:9200/v1/properties'
+        }));
+
+        propsd.once('update', () => {
+          propsd.lookup({identity: 'some-other-service-in-us-east-1', identifier: 'some-uuid'}).then((key) => {
+            expect(scope.isDone()).to.be.true;
+            done();
+          }).catch(done);
+        });
+      });
+
+      it('emits `error` if a client tries to authorize with a key it doesn\'t recognize and that key isn\'t available' +
+      ' in prosd', function(done) {
+        const scope = nock('http://localhost:9200')
+          .get('/v2/properties')
+          .reply(200, fixture)
+          .get('/v2/properties')
+          .reply(200, fixture);
+
+        const propsd = Local.Store(Object.assign({}, defaultPropsdOpts, {
+          path: 'http://localhost:9200/v2/properties'
+        }));
+
+        propsd.once('update', () => {
+          propsd.lookup({identity: 'some-other-service-in-us-east-1', identifier: 'some-uuid'}).catch((err) => {
+            expect(err).to.be.instanceof(Errors.AuthorizationError);
+            done();
+          });
+        });
       });
     });
   });
