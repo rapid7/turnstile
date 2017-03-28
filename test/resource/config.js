@@ -13,7 +13,10 @@ Config.defaults({
   local: {
     db: {
       path: Path.join(__dirname, '/keys.json'),
-      signal: 'SIGHUP'
+      signal: 'SIGHUP',
+      propsd: false,
+      prefix: '',
+      delimiter: ''
     },
     algorithm: 'SHA256',
     skew: 5000
