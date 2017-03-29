@@ -135,6 +135,9 @@ turnt.request(params).then((res) => {
     });
   }
 }).catch((err) => {
-  Log.error(err);
-  process.stdout.write(err.error);
+  if (err.error) {
+    process.stdout.write(err.error);
+  } else {
+    Log.error(err);
+  }
 });
