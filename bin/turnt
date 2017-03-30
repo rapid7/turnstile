@@ -53,11 +53,15 @@ Config.defaults({
   log: {
     json: false,
     timestamp: false,
-    colorize: true
+    colorize: true,
+    prettyPrint: true,
+    level: 'debug'
   }
 });
 
 require('../lib/log');
+Log.cli();
+
 const turnt = require('../test/resource/turnt');
 
 /**
@@ -108,6 +112,7 @@ params.headers = {
   host: params.host,
   'user-agent': `node-${process.version}/turnstile-tester`
 };
+params.identifier = 'turnt-request';
 
 // Round date to the nearest seconds for signing
 params.date = new Date(date);
