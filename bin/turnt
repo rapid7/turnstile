@@ -21,7 +21,8 @@ Config.argv({
   payload: {
     alias: 'd',
     describe: 'HTTP request payload',
-    default: ''
+    default: '',
+    type: 'string'
   },
   digest: {
     describe: 'Digest signing scheme',
