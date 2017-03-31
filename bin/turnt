@@ -4,6 +4,7 @@
 const FS = require('fs');
 const Path = require('path');
 const URL = require('url');
+const Errors = require('../lib/errors');
 
 global.Config = require('nconf');
 
@@ -62,7 +63,7 @@ Config.defaults({
 require('../lib/log');
 Log.cli();
 
-const turnt = require('../test/resource/turnt');
+const TurnstileClient = require('../lib/client');
 
 /**
  * Load request data from STDIN, a file, or from the argument value
@@ -102,17 +103,23 @@ const read = (payload) => {
   });
 };
 
+
+const conf = {
+  digest: Config.get('digest'),
+  secret: Config.get('secret')
+};
+
 const date = new Date();
 const url = Config.get('_')[0];
 const params = URL.parse(url);
 
 params.method = Config.get('method');
+params.identifier = 'turnt-request';
 params.headers = {
   date: date.toUTCString(),
   host: params.host,
   'user-agent': `node-${process.version}/turnstile-tester`
 };
-params.identifier = 'turnt-request';
 
 // Round date to the nearest seconds for signing
 params.date = new Date(date);
@@ -120,29 +127,35 @@ params.date.setMilliseconds(0);
 
 params.identity = Config.get('identity');
 
-turnt.request(params).then((res) => {
-  const output = Config.get('output');
-  const body = res.body;
+// Send the request and handle output
+read(Config.get('payload')).then((payload) => {
+  conf.payload = payload;
+  (new TurnstileClient(conf, params)).request().then((res) => {
+    const output = Config.get('output');
 
-  if (!output) {
-    process.stdout.write(body);
+    const body = res.body;
 
-    return;
-  }
+    if (!output) {
+      Log.info(JSON.parse(body));
 
-  if (body.length > 0) {
-    FS.writeFile(output, body, (err) => {
-      if (err) {
-        throw err;
-      }
+      return;
+    }
 
-      Log.info(`Wrote ${res.body.length} bytes to ${output}`);
-    });
-  }
-}).catch((err) => {
-  if (err.error) {
-    process.stdout.write(err.error);
-  } else {
-    Log.error(err);
-  }
+    if (body.length > 0) {
+      FS.writeFile(output, body, (err) => {
+        if (err) {
+          throw err;
+        }
+
+        Log.info(`Wrote ${res.body.length} bytes to ${output}`);
+      });
+    }
+  }).catch((err) => {
+    // If the error we're getting back is coming from rp and not node, we should log the actual error
+    if (err instanceof Errors.rp.StatusCodeError) {
+      Log.error(JSON.parse(err.error));
+    } else {
+      Log.error(err);
+    }
+  });
 });
