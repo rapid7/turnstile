@@ -53,13 +53,12 @@ Config.argv({
 Config.defaults({
   log: {
     json: false,
-    timestamp: false,
-    colorize: true,
     prettyPrint: true,
     level: 'debug'
   }
 });
 
+// Make logging look nicer
 require('../lib/log');
 Log.cli();
 

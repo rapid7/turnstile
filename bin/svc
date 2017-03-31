@@ -15,13 +15,14 @@ if (Config.get('config')) {
 
 Config.defaults({
   log: {
-    json: true,
-    timestamp: false,
-    colorize: false
+    json: false,
+    prettyPrint: true,
+    level: 'debug'
   }
 });
 
 require('../lib/log');
+Log.cli();
 
 const port = Config.get('service:port') || 7085;
 const host = Config.get('service:hostname') || 'localhost';
