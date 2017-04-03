@@ -21,7 +21,6 @@ Config.argv({
   payload: {
     alias: 'd',
     describe: 'HTTP request payload',
-    default: '',
     type: 'string'
   },
   digest: {
