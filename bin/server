@@ -33,6 +33,20 @@ app.use(bodyParser.raw({
   limit: Config.get('listen:limit')
 }));
 
+app.use((req, res, next) => {
+  /**
+   * This is dumb but required because body-parser assigns an empty object to the body if
+   * the request body is empty. Empty also includes empty strings. We use the _body flag to
+   * determine if body-parser has done any work and if not, we set the body to an empty string
+   * and flip the _body flag so body-parser doesn't do any more work.
+   */
+  if (!req._body) {
+    req.body = Buffer.from('', 'utf8');
+    req._body = true;
+  }
+  next();
+});
+
 // Only attach the correlation ID middleware if it's enabled
 if (Config.get('correlation:enable')) {
   app.use(require('../lib/control/correlation').create(Config.get('correlation')));
