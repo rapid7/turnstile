@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 'use strict';
 
-const Crypto = require('crypto');
 const FS = require('fs');
-const HTTP = require('http');
-const HTTPS = require('https');
 const Path = require('path');
-const Signature = require('../lib/signature');
 const URL = require('url');
+const Errors = require('../lib/errors');
 
 global.Config = require('nconf');
 
@@ -24,7 +21,8 @@ Config.argv({
   payload: {
     alias: 'd',
     describe: 'HTTP request payload',
-    default: false
+    default: '',
+    type: 'string'
   },
   digest: {
     describe: 'Digest signing scheme',
@@ -56,12 +54,16 @@ Config.argv({
 Config.defaults({
   log: {
     json: false,
-    timestamp: false,
-    colorize: true
+    prettyPrint: true,
+    level: 'debug'
   }
 });
 
+// Make logging look nicer
 require('../lib/log');
+Log.cli();
+
+const TurnstileClient = require('../lib/client');
 
 /**
  * Load request data from STDIN, a file, or from the argument value
@@ -71,9 +73,9 @@ require('../lib/log');
  *                          file that should be read.
  * @return {Promise}
  */
-function read(payload) {
-  return new Promise(function(resolve, reject) {
-    if (typeof payload !== 'string') {
+const read = (payload) => {
+  return new Promise((resolve, reject) => {
+    if (typeof payload !== 'string' && !(payload instanceof Buffer)) {
       return resolve(false);
     }
 
@@ -99,123 +101,25 @@ function read(payload) {
       resolve(Buffer.from(payload, 'utf8'));
     }
   });
-}
+};
 
-/**
- * Generate a digest signature for the request's headers
- *
- * @param  {String} algorithm Hash algorithm
- * @param  {Buffer} payload   Request body
- * @return {String}           Base64-encoded hash signature
- */
-function digest(algorithm, payload) {
-  const hash = Crypto.createHash(algorithm);
 
-  return new Promise(function(resolve) {
-    if (payload) {
-      hash.update(payload);
-    }
-
-    resolve(hash.digest('base64'));
-  });
-}
-
-/**
- * Make an HTTP[S] request
- *
- * @param  {Object} protocol An HTTP provider for the request
- * @param  {Object} params Request parameters. @see {@link https://nodejs.org/
- *                         dist/latest-v4.x/docs/api/http.html#http_http_request_options_callback}
- * @return {Promise}
- */
-function request(protocol, params) {
-  const algorithm = Config.get('digest').toUpperCase();
-
-  return read(Config.get('payload'))
-    .then((payload) => {
-      return (params.payload = payload);
-    })
-    .then((payload) => digest(algorithm, payload))
-    .then((signature) => {
-      params.headers.digest = `${algorithm}=${signature}`;
-    })
-    .then(() => {
-      const signature = new Signature(algorithm, params);
-
-      signature.sign(Config.get('secret'));
-      Log.debug(`Request: identity ${params.identity}`);
-      Log.debug(`Request: signature ${signature.signature}`);
-
-      const authorization = Buffer(`${params.identity}:${signature.signature}`, 'utf8').toString('base64');
-
-      params.headers.authorization = `Rapid7-HMAC-V1-${algorithm} ${authorization}`;
-      Log.debug(`Request: authorization ${params.headers.authorization}`);
-    })
-    .then(() => new Promise(function(resolve, reject) {
-      const req = protocol.request(params);
-
-      req.on('abort', () => reject());
-      req.on('aborted', () => reject());
-      req.on('error', (err) => reject(err));
-      req.on('response', (res) => {
-        const chunks = [];
-
-        Log.debug(`Response: HTTP/1.1 ${res.statusCode} ${res.statusMessage}`);
-        Object.keys(res.headers).forEach((header) => {
-          Log.debug(`Response: header ${header}: ${res.headers[header]}`);
-        });
-
-        res.on('data', (chunk) => chunks.push(chunk));
-        res.on('end', () => {
-          const payload = Buffer.concat(chunks);
-
-          res.payload = payload.toString('utf8');
-          Log.debug(`Response: received ${payload.length} bytes`);
-
-          resolve(res);
-        });
-      });
-
-      req.setHeader('Content-Length',
-        params.payload ? params.payload.length : 0);
-
-      Log.debug(`Request: ${params.method} ${params.path} HTTP/1.1`);
-      Object.keys(params.headers).forEach((header) => {
-        Log.debug(`Request: header ${header}: ${params.headers[header]}`);
-      });
-
-      if (params.payload) {
-        Log.debug(`Request: sending ${params.payload.length} bytes`);
-        req.write(params.payload);
-      }
-
-      req.end();
-    }));
-}
+const conf = {
+  digest: Config.get('digest'),
+  secret: Config.get('secret')
+};
 
 const date = new Date();
 const url = Config.get('_')[0];
 const params = URL.parse(url);
 
 params.method = Config.get('method');
+params.identifier = 'turnt-request';
 params.headers = {
   date: date.toUTCString(),
   host: params.host,
   'user-agent': `node-${process.version}/turnstile-tester`
 };
-
-// Select HTTP[S] provider
-const protocol = params.protocol === 'https:' ? HTTPS : HTTP;
-
-// Remove extra/overriding request parameters
-delete params.protocol;
-delete params.auth;
-delete params.host;
-delete params.pathname;
-delete params.query;
-delete params.search;
-delete params.hash;
-delete params.href;
 
 // Round date to the nearest seconds for signing
 params.date = new Date(date);
@@ -223,25 +127,44 @@ params.date.setMilliseconds(0);
 
 params.identity = Config.get('identity');
 
-request(protocol, params)
-  .then((res) => new Promise(function(resolve, reject) {
+// Send the request and handle output
+read(Config.get('payload')).then((payload) => {
+  conf.payload = payload;
+  let client;
+
+  try {
+    client = new TurnstileClient(conf, params);
+  } catch (e) {
+    Log.info(e);
+    process.exit(1);
+  }
+
+  client.request().then((res) => {
     const output = Config.get('output');
 
-    if (!output) {
-      process.stdout.write(res.payload);
+    const body = res.body;
 
-      return resolve();
+    if (!output) {
+      Log.info(JSON.parse(body));
+
+      return;
     }
 
-    if (res.payload.length > 0) {
-      FS.writeFile(output, res.payload, (err) => {
+    if (body.length > 0) {
+      FS.writeFile(output, body, (err) => {
         if (err) {
-          return reject(err);
+          throw err;
         }
 
-        Log.info(`Wrote ${res.payload.length} bytes to ${output}`);
-        resolve();
+        Log.info(`Wrote ${res.body.length} bytes to ${output}`);
       });
     }
-  }))
-  .catch((err) => Log.error(err));
+  }).catch((err) => {
+    // If the error we're getting back is coming from rp and not node, we should log the actual error
+    if (err instanceof Errors.rp.StatusCodeError) {
+      Log.error(JSON.parse(err.error));
+    } else {
+      Log.error(err);
+    }
+  });
+});
