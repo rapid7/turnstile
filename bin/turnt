@@ -21,6 +21,7 @@ Config.argv({
   payload: {
     alias: 'd',
     describe: 'HTTP request payload',
+    default: '',
     type: 'string'
   },
   digest: {
@@ -129,7 +130,16 @@ params.identity = Config.get('identity');
 // Send the request and handle output
 read(Config.get('payload')).then((payload) => {
   conf.payload = payload;
-  (new TurnstileClient(conf, params)).request().then((res) => {
+  let client;
+
+  try {
+    client = new TurnstileClient(conf, params);
+  } catch (e) {
+    Log.info(e);
+    process.exit(1);
+  }
+
+  client.request().then((res) => {
     const output = Config.get('output');
 
     const body = res.body;
