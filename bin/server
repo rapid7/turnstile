@@ -78,6 +78,9 @@ app.use(Errors.handler);
 // Submit metrics for successful responses
 app.use(metrics.responseHandler);
 
+// Write the response
+app.use((req, res) => {
+  res.send(res._body);
 });
 
 server.listen(
