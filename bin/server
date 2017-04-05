@@ -57,8 +57,8 @@ if (Config.get('correlation:enable')) {
 app.use(require('../lib/provider/local').authn(Config.get('local')));
 app.use(require('../lib/control/forward').create(Config.get('service')));
 // Error handler
-app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
-  return Errors.handler(err, req, res);
+app.use(Errors.handler);
+
 });
 
 server.listen(
