@@ -22,7 +22,19 @@ const app = express();
 
 const server = require('http').createServer(app);
 
+// Remove the x-powered-by header
 app.disable('x-powered-by');
+
+// Incoming connection metrics
+app.use((req, res, next) => {
+  req._begin = Date.now();
+  Metrics.increment('request.incoming');
+  Metrics.gauge('request.active', 1);
+
+  next();
+});
+
+// Set a default content-type header if one doesn't exist
 app.use((req, res, next) => {
   if (!req.headers['content-type']) {
     req.headers['content-type'] = 'application/octet-stream';
