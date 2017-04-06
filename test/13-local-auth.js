@@ -169,24 +169,46 @@ describe('lib/provider/local', function() {
   describe('controller', function control() {
     const controller = Controller.authn(Config.get('local'));
 
-    it('passes a valid request to the next middleware', function() {
+    const generateRequest = (identity, secret) => {
       // Set the date key in headers and request. This is required to generate
       // a valid request signature for testing.
       const date = (new Date()).toString();
-      const valid = Object.assign({}, fixture, {
+      const req = Object.assign({}, fixture, {
         headers: Object.assign({}, fixture.headers, {date}),
         identity,
         date: new Date(date)
       });
-
-      const signature = new Signature(Config.get('local:algorithm'), valid);
+      const signature = new Signature(Config.get('local:algorithm'), req);
       const authorization = Buffer.from(`${identity}:${signature.sign(secret)}`, 'utf8').toString('base64');
 
-      valid.headers.authorization = `Rapid7-HMAC-V1-SHA256 ${authorization}`;
+      req.headers.authorization = `Rapid7-HMAC-V1-SHA256 ${authorization}`;
 
-      return HTTP.bench(valid, (req, res) => {
+      return req;
+    };
+
+    it('passes a valid request to the next middleware', function() {
+      return HTTP.bench(generateRequest(identity, secret), (req, res) => {
         controller(req, res, function(err) {
           expect(err).to.be.undefined;
+          res.end();
+        });
+      });
+    });
+
+    it('finds the valid secret in an array', function() {
+      return HTTP.bench(generateRequest('some-turnstile-client', secret), (req, res) => {
+        controller(req, res, function(err) {
+          expect(err).to.be.undefined;
+          res.end();
+        });
+      });
+    });
+
+    it('throws an error if the secret is not found', function() {
+      return HTTP.bench(generateRequest('some-turnstile-client', 'a secret that doesn\'t exist'), (req, res) => {
+        controller(req, res, function(err) {
+          expect(err).to.be.instanceof(Errors.AuthorizationError);
+          expect(err.message).to.be.equal('Invalid authentication factors');
           res.end();
         });
       });
