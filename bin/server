@@ -14,13 +14,27 @@ if (SUPPORTED_ALGORITHMS.indexOf(algorithm.toUpperCase()) === -1) {
 }
 
 require('../lib/log');
+const metrics = require('../lib/metrics');
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 
 const server = require('http').createServer(app);
 
+// Remove the x-powered-by header
 app.disable('x-powered-by');
+
+// Incoming connection metrics
+app.use((req, res, next) => {
+  req._begin = Date.now();
+  Metrics.increment('request.incoming');
+  Metrics.gauge('request.active', 1);
+
+  next();
+});
+
+// Set a default content-type header if one doesn't exist
 app.use((req, res, next) => {
   if (!req.headers['content-type']) {
     req.headers['content-type'] = 'application/octet-stream';
@@ -54,9 +68,19 @@ if (Config.get('correlation:enable')) {
 
 app.use(require('../lib/provider/local').authn(Config.get('local')));
 app.use(require('../lib/control/forward').create(Config.get('service')));
+
+// Submit metrics for error responses
+app.use(metrics.errResponseHandler);
+
 // Error handler
-app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
-  return Errors.handler(err, req, res);
+app.use(Errors.handler);
+
+// Submit metrics for successful responses
+app.use(metrics.responseHandler);
+
+// Write the response
+app.use((req, res) => {
+  res.send(res._body);
 });
 
 server.listen(

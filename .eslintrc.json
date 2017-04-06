@@ -1,7 +1,8 @@
 {
   "globals": {
     "Config": true,
-    "Log": true
+    "Log": true,
+    "Metrics": true
   },
   "plugins": ["import"],
   "extends": [
