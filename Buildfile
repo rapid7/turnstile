@@ -8,5 +8,5 @@ cookbook.depends 'turnstile' do |turnstile|
 end
 
 profile :default do |default|
-  default.chef.run_list 'turnstile::default'
+  default.chef.run_list ['turnstile::nodejs', 'turnstile::default']
 end
