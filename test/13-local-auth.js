@@ -64,7 +64,7 @@ describe('lib/provider/local', function() {
       });
     });
 
-    it('fails if the date header is not a valid number', function() {
+    it('fails if the date header is neither a valid date string or number', function() {
       const invalidDate = Object.assign({}, fixture, {
         headers: Object.assign({}, fixture.headers, {
           date: 'asdfasdfasdfasdf'
@@ -77,16 +77,34 @@ describe('lib/provider/local', function() {
       });
     });
 
-    it('fails if the date header is a datetime string', function() {
-      const invalidDate = Object.assign({}, fixture, {
+    it('passes if the date header is a number', function() {
+      const validNumericDate = Object.assign({}, fixture, {
+        headers: Object.assign({}, fixture.headers, {
+          date: Date.now().toString()
+        })
+      });
+
+      return HTTP.bench(validNumericDate, (req, res) => validateWrapper(req, res)).then((data) => {
+        expect(data[0]).to.be.instanceof(HTTP.IncomingMessage);
+        expect(data[1]).to.be.instanceof(HTTP.ServerResponse);
+      });
+    });
+
+    it('passes but emits a deprecation notice if the date header is a datetime string', function() {
+      const stringDate = Object.assign({}, fixture, {
         headers: Object.assign({}, fixture.headers, {
           date: (new Date()).toISOString()
         })
       });
 
-      return HTTP.bench(invalidDate, (req, res) => validateWrapper(req, res)).catch((err) => {
-        expect(err).to.be.instanceof(Errors.RequestError);
-        expect(err.message).to.equal('Invalid Date header');
+      process.once('deprecation', (err) => {
+        expect(err.message).to.equal('Parsing date strings has been deprecated and will be removed in a later' +
+            ' version. Instead use millisecond-precision epoch time.');
+      });
+
+      return HTTP.bench(stringDate, (req, res) => validateWrapper(req, res)).then((data) => {
+        expect(data[0]).to.be.instanceof(HTTP.IncomingMessage);
+        expect(data[1]).to.be.instanceof(HTTP.ServerResponse);
       });
     });
 
@@ -185,11 +203,13 @@ describe('lib/provider/local', function() {
     const generateRequest = (identity, secret) => {
       // Set the date key in headers and request. This is required to generate
       // a valid request signature for testing.
-      const date = (new Date()).getTime();
+      const date = new Date();
       const req = Object.assign({}, fixture, {
-        headers: Object.assign({}, fixture.headers, {date}),
+        headers: Object.assign({}, fixture.headers, {
+          date: date.getTime().toString()
+        }),
         identity,
-        date: new Date(date)
+        date
       });
       const signature = new Signature(Config.get('local:algorithm'), req);
       const authorization = Buffer.from(`${identity}:${signature.sign(secret)}`, 'utf8').toString('base64');
