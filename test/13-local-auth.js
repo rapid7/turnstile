@@ -22,14 +22,14 @@ hash.update(body, 'utf8');
 const signature = hash.digest('base64');
 
 const authorization = Buffer.from(`${identity}:${signed}`, 'utf8').toString('base64');
-
+const date = new Date();
 const fixture = {
   method: 'GET',
   url: '/after/it',
-  date: new Date('Thu Mar 24 2016 00:17:57 GMT-0400 (EDT)'),
+  date,
   headers: {
     host: 'localhost',
-    date: new Date('Thu Mar 24 2016 00:17:57 GMT-0400 (EDT)').getTime(),
+    date: date.getTime(),
     digest: `${algorithm}=${signature}`,
     authorization: `Rapid7-HMAC-V1-SHA256 ${authorization}`
   },
@@ -64,10 +64,23 @@ describe('lib/provider/local', function() {
       });
     });
 
-    it('fails if the date header is not a valid date string', function() {
+    it('fails if the date header is not a valid number', function() {
       const invalidDate = Object.assign({}, fixture, {
         headers: Object.assign({}, fixture.headers, {
           date: 'asdfasdfasdfasdf'
+        })
+      });
+
+      return HTTP.bench(invalidDate, (req, res) => validateWrapper(req, res)).catch((err) => {
+        expect(err).to.be.instanceof(Errors.RequestError);
+        expect(err.message).to.equal('Invalid Date header');
+      });
+    });
+
+    it('fails if the date header is a datetime string', function() {
+      const invalidDate = Object.assign({}, fixture, {
+        headers: Object.assign({}, fixture.headers, {
+          date: (new Date()).toISOString()
         })
       });
 
