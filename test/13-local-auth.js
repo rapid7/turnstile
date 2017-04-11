@@ -29,7 +29,7 @@ const fixture = {
   date: new Date('Thu Mar 24 2016 00:17:57 GMT-0400 (EDT)'),
   headers: {
     host: 'localhost',
-    date: 'Thu Mar 24 2016 00:17:57 GMT-0400 (EDT)',
+    date: new Date('Thu Mar 24 2016 00:17:57 GMT-0400 (EDT)').getTime(),
     digest: `${algorithm}=${signature}`,
     authorization: `Rapid7-HMAC-V1-SHA256 ${authorization}`
   },
@@ -158,7 +158,7 @@ describe('lib/provider/local', function() {
     it('passes if headers are valid', function() {
       const valid = Object.assign({}, fixture, {
         headers: Object.assign({}, fixture.headers, {
-          date: (new Date()).toString()
+          date: (new Date()).getTime()
         })
       });
 
@@ -172,7 +172,7 @@ describe('lib/provider/local', function() {
     const generateRequest = (identity, secret) => {
       // Set the date key in headers and request. This is required to generate
       // a valid request signature for testing.
-      const date = (new Date()).toString();
+      const date = (new Date()).getTime();
       const req = Object.assign({}, fixture, {
         headers: Object.assign({}, fixture.headers, {date}),
         identity,
