@@ -83,7 +83,7 @@ The Host header is required for all HTTP/1.1 requests. It MAY be used by load ba
 
 A signature MUST have a bounded validity window on the order of minutes. The exact skew limit MAY vary depending upon how closely Clients' and Servers' clocks can be synchronized. Clients MUST include a date header with second precision as defined by [RFC 2616] Section 3.3.1:
 
-  HTTP-date := rfc1123-date | rfc850-date | asctime-date
+    HTTP-date := rfc1123-date | rfc850-date | asctime-date
 
 The signature MUST be bound to a canonical representation of the exact date encoded in the signed request's Date header. To ensure consistency across languages and platforms, this MUST be an ASCII encoded UNIX epoch timestamp, to millisecond precision:
 
