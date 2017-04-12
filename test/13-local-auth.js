@@ -31,7 +31,8 @@ const fixture = {
     host: 'localhost',
     date: date.getTime(),
     digest: `${algorithm}=${signature}`,
-    authorization: `Rapid7-HMAC-V1-SHA256 ${authorization}`
+    authorization: `Rapid7-HMAC-V1-SHA256 ${authorization}`,
+    'x-forwarded-for': '127.0.0.1'
   },
   body
 };
@@ -90,16 +91,11 @@ describe('lib/provider/local', function() {
       });
     });
 
-    it('passes but emits a deprecation notice if the date header is a datetime string', function() {
+    it('passes if the date header is a datetime string', function() {
       const stringDate = Object.assign({}, fixture, {
         headers: Object.assign({}, fixture.headers, {
           date: (new Date()).toISOString()
         })
-      });
-
-      process.once('deprecation', (err) => {
-        expect(err.message).to.equal('Parsing date strings has been deprecated and will be removed in a later' +
-            ' version. Instead use millisecond-precision epoch time.');
       });
 
       return HTTP.bench(stringDate, (req, res) => validateWrapper(req, res)).then((data) => {
