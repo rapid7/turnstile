@@ -109,21 +109,17 @@ const conf = {
   secret: Config.get('secret')
 };
 
-const date = new Date();
 const url = Config.get('_')[0];
 const params = URL.parse(url);
 
+params.date = new Date();
 params.method = Config.get('method');
 params.identifier = 'turnt-request';
 params.headers = {
-  date: date.toUTCString(),
+  date: params.date.getTime(),
   host: params.host,
   'user-agent': `node-${process.version}/turnstile-tester`
 };
-
-// Round date to the nearest seconds for signing
-params.date = new Date(date);
-params.date.setMilliseconds(0);
 
 params.identity = Config.get('identity');
 

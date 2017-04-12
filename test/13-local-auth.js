@@ -22,16 +22,17 @@ hash.update(body, 'utf8');
 const signature = hash.digest('base64');
 
 const authorization = Buffer.from(`${identity}:${signed}`, 'utf8').toString('base64');
-
+const date = new Date();
 const fixture = {
   method: 'GET',
   url: '/after/it',
-  date: new Date('Thu Mar 24 2016 00:17:57 GMT-0400 (EDT)'),
+  date,
   headers: {
     host: 'localhost',
-    date: 'Thu Mar 24 2016 00:17:57 GMT-0400 (EDT)',
+    date: date.getTime(),
     digest: `${algorithm}=${signature}`,
-    authorization: `Rapid7-HMAC-V1-SHA256 ${authorization}`
+    authorization: `Rapid7-HMAC-V1-SHA256 ${authorization}`,
+    'x-forwarded-for': '127.0.0.1'
   },
   body
 };
@@ -64,7 +65,7 @@ describe('lib/provider/local', function() {
       });
     });
 
-    it('fails if the date header is not a valid date string', function() {
+    it('fails if the date header is neither a valid date string or number', function() {
       const invalidDate = Object.assign({}, fixture, {
         headers: Object.assign({}, fixture.headers, {
           date: 'asdfasdfasdfasdf'
@@ -74,6 +75,32 @@ describe('lib/provider/local', function() {
       return HTTP.bench(invalidDate, (req, res) => validateWrapper(req, res)).catch((err) => {
         expect(err).to.be.instanceof(Errors.RequestError);
         expect(err.message).to.equal('Invalid Date header');
+      });
+    });
+
+    it('passes if the date header is a number', function() {
+      const validNumericDate = Object.assign({}, fixture, {
+        headers: Object.assign({}, fixture.headers, {
+          date: Date.now().toString()
+        })
+      });
+
+      return HTTP.bench(validNumericDate, (req, res) => validateWrapper(req, res)).then((data) => {
+        expect(data[0]).to.be.instanceof(HTTP.IncomingMessage);
+        expect(data[1]).to.be.instanceof(HTTP.ServerResponse);
+      });
+    });
+
+    it('passes if the date header is a datetime string', function() {
+      const stringDate = Object.assign({}, fixture, {
+        headers: Object.assign({}, fixture.headers, {
+          date: (new Date()).toISOString()
+        })
+      });
+
+      return HTTP.bench(stringDate, (req, res) => validateWrapper(req, res)).then((data) => {
+        expect(data[0]).to.be.instanceof(HTTP.IncomingMessage);
+        expect(data[1]).to.be.instanceof(HTTP.ServerResponse);
       });
     });
 
@@ -158,7 +185,7 @@ describe('lib/provider/local', function() {
     it('passes if headers are valid', function() {
       const valid = Object.assign({}, fixture, {
         headers: Object.assign({}, fixture.headers, {
-          date: (new Date()).toString()
+          date: (new Date()).getTime()
         })
       });
 
@@ -172,11 +199,13 @@ describe('lib/provider/local', function() {
     const generateRequest = (identity, secret) => {
       // Set the date key in headers and request. This is required to generate
       // a valid request signature for testing.
-      const date = (new Date()).toString();
+      const date = new Date();
       const req = Object.assign({}, fixture, {
-        headers: Object.assign({}, fixture.headers, {date}),
+        headers: Object.assign({}, fixture.headers, {
+          date: date.getTime().toString()
+        }),
         identity,
-        date: new Date(date)
+        date
       });
       const signature = new Signature(Config.get('local:algorithm'), req);
       const authorization = Buffer.from(`${identity}:${signature.sign(secret)}`, 'utf8').toString('base64');
