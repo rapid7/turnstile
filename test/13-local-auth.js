@@ -7,6 +7,7 @@ const HTTP = require('./resource/http');
 const Errors = require('../lib/errors');
 
 const Controller = require('../lib/provider/local');
+const AuthnHelpers = require('../lib/provider/local/authn');
 const Signature = require('../lib/signature');
 const expect = require('chai').expect;
 const Crypto = require('crypto');
@@ -38,17 +39,17 @@ const fixture = {
 };
 
 function validateWrapper(req, res) {
-  Controller.validate(5000, req);
+  AuthnHelpers.validate(5000, req);
   res.end();
 }
 
 function authorizationWrapper(req, res) {
-  Controller.authorization(req);
+  AuthnHelpers.authorization(req);
   res.end();
 }
 
 function digestWrapper(req, res) {
-  Controller.digest('SHA256', req);
+  AuthnHelpers.digest('SHA256', req);
   res.end();
 }
 
