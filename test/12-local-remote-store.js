@@ -2,7 +2,7 @@
 
 require('./resource/config');
 
-const Local = require('../lib/provider/local');
+const Local = require('../lib/provider/store');
 const Resource = require('./resource');
 const expect = require('chai').expect;
 const nock = require('nock');
