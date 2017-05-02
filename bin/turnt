@@ -38,7 +38,6 @@ Config.argv({
     describe: 'Write output to a file',
     default: false
   },
-
   identity: {
     alias: 'u',
     demand: true,
@@ -48,6 +47,12 @@ Config.argv({
     alias: 'p',
     demand: true,
     describe: 'Secret key for the request'
+  },
+  reqType: {
+    alias: 't',
+    default: 'hmac',
+    choices: ['hmac', 'jwt'],
+    describe: 'Type of request (jwt|hmac)'
   }
 });
 
@@ -106,7 +111,8 @@ const read = (payload) => {
 
 const conf = {
   digest: Config.get('digest'),
-  secret: Config.get('secret')
+  secret: Config.get('secret'),
+  type: Config.get('reqType')
 };
 
 const url = Config.get('_')[0];
