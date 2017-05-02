@@ -22,6 +22,9 @@ const app = express();
 
 const server = require('http').createServer(app);
 
+const local = require('../lib/provider/local');
+const forward = require('../lib/control/forward');
+
 // Remove the x-powered-by header
 app.disable('x-powered-by');
 
@@ -39,6 +42,14 @@ app.use((req, res, next) => {
   if (!req.headers['content-type']) {
     req.headers['content-type'] = 'application/octet-stream';
   }
+  next();
+});
+
+app.use((req, res, next) => {
+  if (!req.identity && req.headers.identity) {
+    req.identity = req.headers.identity;
+  }
+
   next();
 });
 
@@ -66,8 +77,18 @@ if (Config.get('correlation:enable')) {
   app.use(require('../lib/control/correlation').create(Config.get('correlation')));
 }
 
-app.use(require('../lib/provider/local').authn(Config.get('local')));
-app.use(require('../lib/control/forward').create(Config.get('service')));
+// Add header check here. If the Authorization: Bearer <token> form exists, use the
+// JWT middleware, otherwise use HMAC.
+app.use((req, res, next) => {
+  if (req.headers['authorization'] && req.headers['authorization'].startsWith('Bearer')) {
+    // use the JWT middleware
+    return local.jwt(Config.get('local'))(req, res, next);
+  } else {
+    return local.authn(Config.get('local'))(req, res, next);
+  }
+});
+
+app.use(forward.create(Config.get('service')));
 
 // Submit metrics for error responses
 app.use(metrics.errResponseHandler);
