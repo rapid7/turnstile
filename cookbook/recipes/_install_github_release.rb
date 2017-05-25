@@ -20,4 +20,5 @@ end
 package 'turnstile' do
   source resources('remote_file[turnstile]').path
   provider Chef::Provider::Package::Dpkg
+  version node['turnstile']['version']
 end
