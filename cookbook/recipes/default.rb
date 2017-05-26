@@ -24,7 +24,6 @@ end
 
 case node['turnstile']['install'].to_sym
 when :github_release then include_recipe "#{cookbook_name}::_install_github_release"
-when :github_ref then include_recipe "#{cookbook_name}::_install_github_ref"
 when :local then include_recipe "#{cookbook_name}::_install_local"
 else Chef::Application.fatal!("Unhanded Turnstile installation method #{node['turnstile']['install']}")
 end
