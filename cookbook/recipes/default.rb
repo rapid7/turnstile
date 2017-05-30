@@ -22,11 +22,30 @@ user node['turnstile']['user'] do
   home node['turnstile']['paths']['directory']
 end
 
-case node['turnstile']['install'].to_sym
-when :github_release then include_recipe "#{cookbook_name}::_install_github_release"
-when :github_ref then include_recipe "#{cookbook_name}::_install_github_ref"
-when :local then include_recipe "#{cookbook_name}::_install_local"
-else Chef::Application.fatal!("Unhanded Turnstile installation method #{node['turnstile']['install']}")
+# Fetch and install Turnstile
+remote_file 'turnstile' do
+  source Turnstile::Helpers.github_download('rapid7', 'turnstile', node['turnstile']['version'])
+  path ::File.join(Chef::Config['file_cache_path'], "turnstile-#{node['turnstile']['version']}.deb")
+
+  action :create_if_missing
+  backup false
+end
+
+version_dir = "#{ node['turnstile']['paths']['directory'] }-#{ node['turnstile']['version'] }"
+
+package 'turnstile' do
+  source resources('remote_file[turnstile]').path
+  provider Chef::Provider::Package::Dpkg
+  version node['turnstile']['version']
+
+  notifies :create, "link[#{node['turnstile']['paths']['directory']}]", :immediately
+end
+
+link node['turnstile']['paths']['directory'] do
+  to version_dir
+
+  action :nothing
+  notifies :restart, 'service[turnstile]' if node['turnstile']['enable']
 end
 
 ## Upstart Service
