@@ -22,10 +22,43 @@ user node['turnstile']['user'] do
   home node['turnstile']['paths']['directory']
 end
 
-case node['turnstile']['install'].to_sym
-when :github_release then include_recipe "#{cookbook_name}::_install_github_release"
-when :local then include_recipe "#{cookbook_name}::_install_local"
-else Chef::Application.fatal!("Unhanded Turnstile installation method #{node['turnstile']['install']}")
+version_dir = "#{ node['turnstile']['paths']['directory'] }-#{ node['turnstile']['version'] }"
+
+# Install packages if running in local install mode
+execute 'npm install' do
+  command 'npm install'
+  cwd version_dir
+  environment 'HOME' => version_dir
+
+  notifies :create, "link[#{node['turnstile']['paths']['directory']}]", :immediately
+end if node['turnstile']['install'].to_sym == :local
+
+if node['turnstile']['install'].to_sym != :local
+  # If we're not running in local mode (using synced folders) we download
+  # and install the named release from Github
+  remote_file 'turnstile' do
+    source Turnstile::Helpers.github_download('rapid7', 'turnstile', node['turnstile']['version'])
+    path ::File.join(Chef::Config['file_cache_path'], "turnstile-#{node['turnstile']['version']}.deb")
+
+    action :create_if_missing
+    backup false
+  end
+
+  package 'turnstile' do
+    source resources('remote_file[turnstile]').path
+    provider Chef::Provider::Package::Dpkg
+    version node['turnstile']['version']
+
+    notifies :create, "link[#{node['turnstile']['paths']['directory']}]", :immediately
+  end
+end
+## Fetch and install Turnstile
+
+link node['turnstile']['paths']['directory'] do
+  to "#{ node['turnstile']['paths']['directory'] }-#{ node['turnstile']['version'] }"
+
+  action :nothing
+  notifies :restart, 'service[turnstile]' if node['turnstile']['enable']
 end
 
 ## Upstart Service
