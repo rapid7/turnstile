@@ -48,9 +48,19 @@ link node['turnstile']['paths']['directory'] do
   notifies :restart, 'service[turnstile]' if node['turnstile']['enable']
 end
 
-## Upstart Service
-template '/etc/init/turnstile.conf' do
-  source 'upstart.conf.erb'
+if Chef::VersionConstraint.new("> 14.04").include?(node['platform_version'])
+  service_script_path = '/etc/systemd/system/turnstile.service'
+  service_script = 'systemd.service.erb'
+  service_provider = Chef::Provider::Service::Systemd
+else
+  service_script_path = '/etc/init/turnstile.conf'
+  service_script = 'upstart.conf.erb'
+  service_provider = Chef::Provider::Service::Upstart
+end
+
+# Set service script
+template service_script_path do
+  source service_script
   variables(
     :description => 'turnstile configuration service',
     :user => node['turnstile']['user'],
@@ -59,8 +69,6 @@ template '/etc/init/turnstile.conf' do
       "-c #{node['turnstile']['paths']['configuration']}"
     ]
   )
-
-  notifies :restart, 'service[turnstile]' if node['turnstile']['enable']
 end
 
 directory 'turnstile-configuration-directory' do
@@ -81,5 +89,5 @@ end
 
 service 'turnstile' do
   action node['turnstile']['enable'] ? [:start, :enable] : [:stop, :disable]
-  provider Chef::Provider::Service::Upstart
+  provider service_provider
 end
